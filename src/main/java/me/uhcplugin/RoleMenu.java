@@ -1,6 +1,7 @@
 // src/main/java/me/uhcplugin/RoleMenu.java
 package me.uhcplugin;
 
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
