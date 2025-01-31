@@ -9,13 +9,13 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.event.inventory.InventoryClickEvent;
 
 public class Main extends JavaPlugin implements Listener {
 
@@ -23,16 +23,15 @@ public class Main extends JavaPlugin implements Listener {
     public void onEnable() {
         Bukkit.getLogger().info("[UHCPlugin] Le plugin est activé !");
         GameManager.setGameState(GameManager.GameState.WAITING);
-        Bukkit.getLogger().info("[UHCPlugin] État du jeu défini sur WAITING.");
         saveDefaultConfig();
         getServer().getPluginManager().registerEvents(this, this);
+        getServer().getPluginManager().registerEvents(new RoleMenu(this), this);
     }
 
     @Override
     public void onDisable() {
         Bukkit.getLogger().info("[UHCPlugin] Le plugin est désactivé !");
         GameManager.setGameState(GameManager.GameState.ENDED);
-        Bukkit.getLogger().info("[UHCPlugin] État du jeu défini sur ENDED.");
     }
 
     @Override
@@ -45,38 +44,32 @@ public class Main extends JavaPlugin implements Listener {
         Player player = (Player) sender;
 
         if (command.getName().equalsIgnoreCase("jump")) {
-            String worldName = getConfig().getString("jump-location.world");
-            double x = getConfig().getDouble("jump-location.x");
-            double y = getConfig().getDouble("jump-location.y");
-            double z = getConfig().getDouble("jump-location.z");
-            float yaw = (float) getConfig().getDouble("jump-location.yaw") + 230;
-            float pitch = (float) getConfig().getDouble("jump-location.pitch");
-
-            if (worldName != null) {
-                player.teleport(new Location(Bukkit.getWorld(worldName), x, y, z, yaw, pitch));
-                player.sendMessage(ChatColor.AQUA + "Tu as été téléporté au Jump !");
-            } else {
-                player.sendMessage(ChatColor.RED + "Le monde spécifié dans la config n'existe pas !");
-            }
+            teleportPlayer(player, "jump-location");
             return true;
         }
 
         if (command.getName().equalsIgnoreCase("spawn")) {
-            String worldName = getConfig().getString("spawn-location.world");
-            double x = getConfig().getDouble("spawn-location.x");
-            double y = getConfig().getDouble("spawn-location.y");
-            double z = getConfig().getDouble("spawn-location.z");
-
-            if (worldName != null) {
-                player.teleport(new Location(Bukkit.getWorld(worldName), x, y, z));
-                player.sendMessage(ChatColor.GREEN + "Tu as été téléporté au Spawn !");
-            } else {
-                player.sendMessage(ChatColor.RED + "Le monde spécifié dans la config n'existe pas !");
-            }
+            teleportPlayer(player, "spawn-location");
             return true;
         }
 
         return false;
+    }
+
+    private void teleportPlayer(Player player, String locationKey) {
+        String worldName = getConfig().getString(locationKey + ".world");
+        double x = getConfig().getDouble(locationKey + ".x");
+        double y = getConfig().getDouble(locationKey + ".y");
+        double z = getConfig().getDouble(locationKey + ".z");
+        float yaw = (float) getConfig().getDouble(locationKey + ".yaw");
+        float pitch = (float) getConfig().getDouble(locationKey + ".pitch");
+
+        if (worldName != null) {
+            player.teleport(new Location(Bukkit.getWorld(worldName), x, y, z, yaw, pitch));
+            player.sendMessage(ChatColor.GREEN + "Téléporté à " + locationKey.replace("-location", ""));
+        } else {
+            player.sendMessage(ChatColor.RED + "Le monde spécifié dans la config n'existe pas !");
+        }
     }
 
     @EventHandler
@@ -84,44 +77,49 @@ public class Main extends JavaPlugin implements Listener {
         Player player = event.getPlayer();
         if (GameManager.getGameState() == GameManager.GameState.WAITING) {
             player.getInventory().clear();
-            ItemStack compass = new ItemStack(Material.COMPASS);
-            ItemMeta compassMeta = compass.getItemMeta();
-            if (compassMeta != null) {
-                compassMeta.setDisplayName(ChatColor.GOLD + "Menu UHC");
-                compass.setItemMeta(compassMeta);
-            }
-            player.getInventory().setItem(4, compass);
+            giveCompass(player);
         }
+    }
+
+    private void giveCompass(Player player) {
+        ItemStack compass = new ItemStack(Material.COMPASS);
+        ItemMeta compassMeta = compass.getItemMeta();
+        if (compassMeta != null) {
+            compassMeta.setDisplayName(ChatColor.GOLD + "Menu UHC");
+            compass.setItemMeta(compassMeta);
+        }
+        player.getInventory().setItem(4, compass);
     }
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        Player player = (Player) event.getWhoClicked();
-        ItemStack clickedItem = event.getCurrentItem();
-        if (clickedItem == null || !clickedItem.hasItemMeta()) return;
+        if (event.getCurrentItem() == null || !event.getCurrentItem().hasItemMeta()) return;
 
+        Player player = (Player) event.getWhoClicked();
         String inventoryTitle = event.getView().getTitle();
 
         if (inventoryTitle.equals(ChatColor.GOLD + "Menu UHC")) {
             event.setCancelled(true);
-            switch (clickedItem.getType()) {
-                case BLUE_CONCRETE:
-                    player.performCommand("jump");
-                    break;
-                case RED_BED:
-                    player.performCommand("spawn");
-                    break;
-                case COMMAND_BLOCK:
-                    openConfigMenu(player);
-                    break;
-            }
+            handleMainMenuClick(player, event.getCurrentItem());
         } else if (inventoryTitle.equals(ChatColor.YELLOW + "Configuration UHC")) {
             event.setCancelled(true);
-            switch (clickedItem.getType()) {
-                case ARROW:
-                    openMainMenu(player);
-                    break;
-            }
+            handleConfigMenuClick(player, event.getCurrentItem());
+        }
+    }
+
+    private void handleMainMenuClick(Player player, ItemStack clickedItem) {
+        if (clickedItem.getType() == Material.BLUE_CONCRETE) {
+            player.performCommand("jump");
+        } else if (clickedItem.getType() == Material.RED_BED) {
+            player.performCommand("spawn");
+        } else if (clickedItem.getType() == Material.COMMAND_BLOCK) {
+            openConfigMenu(player);
+        }
+    }
+
+    private void handleConfigMenuClick(Player player, ItemStack clickedItem) {
+        if (clickedItem.getType() == Material.ARROW) {
+            openMainMenu(player);
         }
     }
 
@@ -148,9 +146,9 @@ public class Main extends JavaPlugin implements Listener {
 
         for (int i = 0; i < 54; i++) {
             if (i < 9 || i >= 45 || i % 9 == 0 || i % 9 == 8) {
-                menu.setItem(i, blackGlass); // Bordure en noir
+                menu.setItem(i, blackGlass);
             } else {
-                menu.setItem(i, redGlass); // Remplissage en rouge
+                menu.setItem(i, redGlass);
             }
         }
 
@@ -184,34 +182,4 @@ public class Main extends JavaPlugin implements Listener {
         }
         return item;
     }
-    // src/main/java/me/uhcplugin/Main.java
-        Player player = (Player) sender;
-        if (!player.hasPermission("uhcplugin.startuhc")) {
-            player.sendMessage(ChatColor.RED + "Permission insuffisante !");
-            return true;
-        }
-
-        GameManager.setGameState(GameManager.GameState.STARTING);
-        Bukkit.broadcastMessage(ChatColor.GOLD + "L'UHC démarre dans 10 secondes !");
-
-        // Attribuer les rôles après 10 secondes
-        Bukkit.getScheduler().runTaskLater(this, () -> {
-            new RoleManager(this).assignRoles();
-            GameManager.setGameState(GameManager.GameState.PLAYING);
-            Bukkit.broadcastMessage(ChatColor.GOLD + "Les rôles ont été attribués !");
-        }, 200L); // 200 ticks = 10 secondes
-
-        return true;
-    }
-    return false;
-}
-@Override
-public void onEnable() {
-    Bukkit.getLogger().info("[UHCPlugin] Le plugin est activé !");
-    GameManager.setGameState(GameManager.GameState.WAITING);
-    Bukkit.getLogger().info("[UHCPlugin] État du jeu défini sur WAITING.");
-    saveDefaultConfig();
-    getServer().getPluginManager().registerEvents(this, this);
-    getServer().getPluginManager().registerEvents(new RoleMenu(this), this); // Ajoutez cette ligne
-}
 }
