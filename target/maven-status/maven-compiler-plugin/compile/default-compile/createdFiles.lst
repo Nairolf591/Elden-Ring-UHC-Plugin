@@ -1,4 +1,5 @@
-me\uhcplugin\Main$1.class
 me\uhcplugin\Main.class
 me\uhcplugin\GameManager$GameState.class
 me\uhcplugin\GameManager.class
+me\uhcplugin\RoleManager.class
+me\uhcplugin\RoleMenu.class

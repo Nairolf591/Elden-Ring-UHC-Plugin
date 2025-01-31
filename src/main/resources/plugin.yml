@@ -3,44 +3,35 @@ main: me.uhcplugin.Main
 version: 1.0
 api-version: 1.18
 commands:
-  uhctest:
-    description: Commande de test pour voir si le plugin fonctionne
-    usage: /uhctest
-    permission: uhcplugin.uhctest
-
-  setspawn:
-    description: Définit le spawn de l'UHC
-    usage: /setspawn
-    permission: uhcplugin.setspawn
-
-  setjump:
-    description: Définit la zone de jump
-    usage: /setjump
-    permission: uhcplugin.setjump
-
-  jump:
-    description: Téléporte le joueur au jump
-    usage: /jump
-    permission: uhcplugin.jump
-  spawn:
-    description: Téléporte le joueur au spawn
-    usage: /spawn
-    permission: uhcplugin.spawn
-
-    commands:
   startuhc:
     description: Démarre la partie UHC
     usage: /startuhc
     permission: uhcplugin.startuhc
-
+  uhctest:
+    description: Vérifie si le plugin fonctionne
+    usage: /uhctest
+  setspawn:
+    description: Définit le spawn de l'UHC
+    usage: /setspawn
+  setjump:
+    description: Définit la zone de jump
+    usage: /setjump
+  jump:
+    description: Téléporte le joueur au jump
+    usage: /jump
+  spawn:
+    description: Téléporte le joueur au spawn
+    usage: /spawn
 permissions:
   uhcplugin.startuhc:
     description: Permission pour démarrer l'UHC
     default: op
-
-
-
-
-
+  uhcplugin.config:
+    description: Permission pour modifier la configuration UHC
+    default: op
+  permissions:
+    uhcplugin.config:
+      description: Permission pour modifier la configuration UHC
+      default: op
 
 

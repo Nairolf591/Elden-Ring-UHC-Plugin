@@ -57,44 +57,14 @@ public class RoleMenu implements Listener {
 
     // Gestion du clic sur le menu
     @EventHandler
-    public void onInventoryClick(InventoryClickEvent event) {
-        if (!event.getView().getTitle().equals(ChatColor.GOLD + "Activation des rôles")) return;
-
-        event.setCancelled(true);
-        Player player = (Player) event.getWhoClicked();
-        ItemStack clickedItem = event.getCurrentItem();
-        if (clickedItem == null || !clickedItem.hasItemMeta()) return;
-
-        String roleName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
-
-        if (roleName.equals("Retour")) {
-            player.closeInventory();
-            return;
-        }
-
-        boolean newState = !config.getBoolean("roles." + roleName);
-        config.set("roles." + roleName, newState);
-        plugin.saveConfig();
-
-        // Met à jour l'item dans le menu
-        ItemStack newItem = new ItemStack(newState ? Material.LIME_DYE : Material.RED_DYE);
-        ItemMeta meta = newItem.getItemMeta();
-        if (meta != null) {
-            meta.setDisplayName((newState ? ChatColor.GREEN : ChatColor.RED) + roleName);
-            newItem.setItemMeta(meta);
-        }
-        event.getInventory().setItem(event.getSlot(), newItem);
-
-        player.sendMessage("§aLe rôle " + roleName + " est maintenant " + (newState ? "activé" : "désactivé") + " !");
-    }
-
-    // Ajoute un bloc spécial qui ouvre le menu des rôles
-    @EventHandler
     public void onBlockClick(PlayerInteractEvent event) {
         if (event.getAction().toString().contains("RIGHT_CLICK")) {
             ItemStack item = event.getItem();
-            if (item != null && item.getType() == Material.BOOK) {
-                openRoleMenu(event.getPlayer());
+            if (item != null && item.getType() == Material.BOOK && item.hasItemMeta()) {
+                ItemMeta meta = item.getItemMeta();
+                if (meta.hasDisplayName() && meta.getDisplayName().equals(ChatColor.GOLD + "📜 Gérer les Rôles")) {
+                    openRoleMenu(event.getPlayer()); // ✅ Ouvre le menu seulement si le livre a le bon nom
+                }
             }
         }
     }

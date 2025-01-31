@@ -3,7 +3,7 @@ jump-location:
   x: -219.56
   y: 20.00
   z: 102.50
-  yaw: + 180
+  yaw: + 230
   pitch: 0
 
 spawn-location:
@@ -14,4 +14,14 @@ spawn-location:
   yaw: 0
   pitch: 0
 
+# src/main/resources/config.yml
+roles:
+  Radahn: true
+  Melina: true
+  Sans-éclat: true
+  Ranni: true
+  Godrick: true
+  Morgott: true
+  Margit: true
+  D_témoin_de_la_mort: true
 
