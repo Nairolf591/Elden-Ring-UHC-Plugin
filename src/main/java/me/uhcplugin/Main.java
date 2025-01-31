@@ -319,9 +319,4 @@ public class Main extends JavaPlugin implements Listener {
         }
         return item;
     }
-    //@Override
-   //public void onEnable() {
-       // ... (code existant)
-      // new Godfrey(this); // Initialise le rôle Godfrey
-   //}
 }
