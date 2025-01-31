@@ -14,6 +14,29 @@ commands:
         description: Permission pour démarrer l'UHC
         default: op
 
+  setspawn:
+    description: Définit le spawn de l'UHC
+    usage: /setspawn
+    permission: uhcplugin.setspawn
+
+  setjump:
+    description: Définit la zone de jump
+    usage: /setjump
+    permission: uhcplugin.setjump
+
+  jump:
+    description: Téléporte le joueur au jump
+    usage: /jump
+    permission: uhcplugin.jump
+  spawn:
+    description: Téléporte le joueur au spawn
+    usage: /spawn
+    permission: uhcplugin.spawn
+
+
+
+
+
 
 
 

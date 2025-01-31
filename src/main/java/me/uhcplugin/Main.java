@@ -2,6 +2,7 @@ package me.uhcplugin;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -16,18 +17,14 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.event.inventory.InventoryClickEvent;
 
-public class Main extends JavaPlugin implements Listener { // ✅ Ajout de implements Listener
+public class Main extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
         Bukkit.getLogger().info("[UHCPlugin] Le plugin est activé !");
         GameManager.setGameState(GameManager.GameState.WAITING);
         Bukkit.getLogger().info("[UHCPlugin] État du jeu défini sur WAITING.");
-
-        // Charger la configuration
         saveDefaultConfig();
-
-        // Enregistrer les événements
         getServer().getPluginManager().registerEvents(this, this);
     }
 
@@ -40,31 +37,41 @@ public class Main extends JavaPlugin implements Listener { // ✅ Ajout de imple
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (command.getName().equalsIgnoreCase("startuhc")) {
-            if (GameManager.getGameState() != GameManager.GameState.WAITING) {
-                sender.sendMessage(ChatColor.RED + "La partie a déjà commencé ou est terminée !");
-                return true;
-            }
-
-            GameManager.setGameState(GameManager.GameState.STARTING);
-            Bukkit.broadcastMessage(ChatColor.GREEN + "[UHC] La partie va commencer dans 10 secondes !");
-
-            // Ajout d'un délai avant le début
-            Bukkit.getScheduler().runTaskLater(this, () -> {
-                GameManager.setGameState(GameManager.GameState.PLAYING);
-                Bukkit.broadcastMessage(ChatColor.GOLD + "[UHC] La partie commence maintenant !");
-            }, 200L); // 10 secondes (20 ticks = 1 seconde)
-
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(ChatColor.RED + "Seuls les joueurs peuvent exécuter cette commande !");
             return true;
         }
 
-        // Gestion de la commande /uhctest
-        if (command.getName().equalsIgnoreCase("uhctest")) {
-            if (sender instanceof Player) {
-                Player player = (Player) sender;
-                player.sendMessage(ChatColor.GREEN + "Le plugin fonctionne !");
+        Player player = (Player) sender;
+
+        if (command.getName().equalsIgnoreCase("jump")) {
+            String worldName = getConfig().getString("jump-location.world");
+            double x = getConfig().getDouble("jump-location.x");
+            double y = getConfig().getDouble("jump-location.y");
+            double z = getConfig().getDouble("jump-location.z");
+            float yaw = (float) getConfig().getDouble("jump-location.yaw") + 230;
+            float pitch = (float) getConfig().getDouble("jump-location.pitch");
+
+            if (worldName != null) {
+                player.teleport(new Location(Bukkit.getWorld(worldName), x, y, z, yaw, pitch));
+                player.sendMessage(ChatColor.AQUA + "Tu as été téléporté au Jump !");
             } else {
-                sender.sendMessage(ChatColor.RED + "Cette commande ne peut être exécutée que par un joueur !");
+                player.sendMessage(ChatColor.RED + "Le monde spécifié dans la config n'existe pas !");
+            }
+            return true;
+        }
+
+        if (command.getName().equalsIgnoreCase("spawn")) {
+            String worldName = getConfig().getString("spawn-location.world");
+            double x = getConfig().getDouble("spawn-location.x");
+            double y = getConfig().getDouble("spawn-location.y");
+            double z = getConfig().getDouble("spawn-location.z");
+
+            if (worldName != null) {
+                player.teleport(new Location(Bukkit.getWorld(worldName), x, y, z));
+                player.sendMessage(ChatColor.GREEN + "Tu as été téléporté au Spawn !");
+            } else {
+                player.sendMessage(ChatColor.RED + "Le monde spécifié dans la config n'existe pas !");
             }
             return true;
         }
@@ -72,73 +79,109 @@ public class Main extends JavaPlugin implements Listener { // ✅ Ajout de imple
         return false;
     }
 
-    // ✅ Donne une boussole aux joueurs quand ils rejoignent la phase WAITING
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-
-        // Vérifie si la partie est en attente
         if (GameManager.getGameState() == GameManager.GameState.WAITING) {
-            // ✅ Vider l'inventaire du joueur
             player.getInventory().clear();
-
-            // ✅ Donner la boussole
             ItemStack compass = new ItemStack(Material.COMPASS);
             ItemMeta compassMeta = compass.getItemMeta();
             if (compassMeta != null) {
                 compassMeta.setDisplayName(ChatColor.GOLD + "Menu UHC");
                 compass.setItemMeta(compassMeta);
             }
-
-            // ✅ Ajouter la boussole au slot 4
             player.getInventory().setItem(4, compass);
         }
     }
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        // Vérifie si le menu ouvert est le "Menu UHC"
-        if (event.getView().getTitle().equals(ChatColor.GOLD + "Menu UHC")) {
-            event.setCancelled(true); // ✅ Annule le déplacement d'items
+        Player player = (Player) event.getWhoClicked();
+        ItemStack clickedItem = event.getCurrentItem();
+        if (clickedItem == null || !clickedItem.hasItemMeta()) return;
+
+        String inventoryTitle = event.getView().getTitle();
+
+        if (inventoryTitle.equals(ChatColor.GOLD + "Menu UHC")) {
+            event.setCancelled(true);
+            switch (clickedItem.getType()) {
+                case BLUE_CONCRETE:
+                    player.performCommand("jump");
+                    break;
+                case RED_BED:
+                    player.performCommand("spawn");
+                    break;
+                case COMMAND_BLOCK:
+                    openConfigMenu(player);
+                    break;
+            }
+        } else if (inventoryTitle.equals(ChatColor.YELLOW + "Configuration UHC")) {
+            event.setCancelled(true);
+            switch (clickedItem.getType()) {
+                case ARROW:
+                    openMainMenu(player);
+                    break;
+            }
         }
     }
 
-    // ✅ Événement quand un joueur clique avec la boussole
     @EventHandler
     public void onCompassClick(PlayerInteractEvent event) {
         Player player = event.getPlayer();
         ItemStack item = player.getInventory().getItemInMainHand();
 
-        // Vérifie si l'item est une boussole et s'appelle "Menu UHC"
-        if (item.getType() == Material.COMPASS && item.hasItemMeta()) {
-            ItemMeta meta = item.getItemMeta();
-            if (meta != null && meta.getDisplayName().equals(ChatColor.GOLD + "Menu UHC")) {
+        if (item.getType() == Material.COMPASS && item.hasItemMeta() &&
+                item.getItemMeta().getDisplayName().equals(ChatColor.GOLD + "Menu UHC")) {
+            openMainMenu(player);
+        }
+    }
 
-                // Création de l'inventaire GUI
-                Inventory menu = Bukkit.createInventory(null, 9, ChatColor.GOLD + "Menu UHC");
+    public void openMainMenu(Player player) {
+        Inventory menu = Bukkit.createInventory(null, 54, ChatColor.GOLD + "Menu UHC");
 
-                // Ajout des objets dans le menu
-                ItemStack jumpItem = new ItemStack(Material.BLUE_CONCRETE);
-                ItemMeta jumpMeta = jumpItem.getItemMeta();
-                if (jumpMeta != null) {
-                    jumpMeta.setDisplayName(ChatColor.RED + "Jump");
-                    jumpItem.setItemMeta(jumpMeta);
-                }
+        ItemStack jumpItem = createItem(Material.BLUE_CONCRETE, ChatColor.RED + "Jump");
+        ItemStack spawnItem = createItem(Material.RED_BED, ChatColor.RED + "Spawn");
+        ItemStack configItem = createItem(Material.COMMAND_BLOCK, ChatColor.YELLOW + "Configuration UHC");
 
-                ItemStack spawnItem = new ItemStack(Material.RED_BED);
-                ItemMeta spawnMeta = spawnItem.getItemMeta();
-                if (spawnMeta != null) {
-                    spawnMeta.setDisplayName(ChatColor.RED + "Spawn");
-                    spawnItem.setItemMeta(spawnMeta);
-                }
+        ItemStack blackGlass = createItem(Material.BLACK_STAINED_GLASS_PANE, " ");
+        ItemStack redGlass = createItem(Material.RED_STAINED_GLASS_PANE, " ");
 
-                // Placer les objets dans le menu
-                menu.setItem(0, jumpItem);
-                menu.setItem(4, spawnItem);
-
-                // Ouvrir le menu pour le joueur
-                player.openInventory(menu);
+        for (int i = 0; i < 54; i++) {
+            if (i < 9 || i >= 45 || i % 9 == 0 || i % 9 == 8) {
+                menu.setItem(i, blackGlass); // Bordure en noir
+            } else {
+                menu.setItem(i, redGlass); // Remplissage en rouge
             }
         }
+
+        menu.setItem(10, jumpItem);
+        menu.setItem(16, spawnItem);
+        menu.setItem(31, configItem);
+
+        player.openInventory(menu);
+    }
+
+    public void openConfigMenu(Player player) {
+        Inventory configMenu = Bukkit.createInventory(null, 9, ChatColor.YELLOW + "Configuration UHC");
+
+        ItemStack borderSize = createItem(Material.BARRIER, ChatColor.RED + "Taille de la Bordure");
+        ItemStack pvpTimer = createItem(Material.DIAMOND_SWORD, ChatColor.RED + "Temps avant PvP");
+        ItemStack backButton = createItem(Material.ARROW, ChatColor.GRAY + "Retour");
+
+        configMenu.setItem(0, borderSize);
+        configMenu.setItem(1, pvpTimer);
+        configMenu.setItem(8, backButton);
+
+        player.openInventory(configMenu);
+    }
+
+    private ItemStack createItem(Material material, String name) {
+        ItemStack item = new ItemStack(material);
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(name);
+            item.setItemMeta(meta);
+        }
+        return item;
     }
 }
