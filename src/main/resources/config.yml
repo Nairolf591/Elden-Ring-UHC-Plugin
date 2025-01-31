@@ -9,3 +9,13 @@ spawn-location:
   x: 0
   y: 64
   z: 0
+
+roles:
+  Radahn: true
+  Melina: true
+  SansEclat: true
+  Ranni: true
+  Godrick: true
+  Morgott: true
+  Margit: true
+  TemoinDeLaMort: true
