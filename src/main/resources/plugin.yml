@@ -8,12 +8,6 @@ commands:
     usage: /uhctest
     permission: uhcplugin.uhctest
 
-  startuhc:
-    permissions:
-      uhcplugin.startuhc:
-        description: Permission pour démarrer l'UHC
-        default: op
-
   setspawn:
     description: Définit le spawn de l'UHC
     usage: /setspawn

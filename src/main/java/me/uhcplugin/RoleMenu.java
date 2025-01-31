@@ -1,22 +1,18 @@
-// src/main/java/me/uhcplugin/RoleMenu.java
 package me.uhcplugin;
 
-import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import java.util.List;
 import java.util.Set;
 
 public class RoleMenu implements Listener {
@@ -29,18 +25,9 @@ public class RoleMenu implements Listener {
         this.config = plugin.getConfig();
     }
 
-    @EventHandler
-    public void onBlockClick(PlayerInteractEvent event) {
-        if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-            Block block = event.getClickedBlock();
-            if (block != null && block.getType() == Material.EMERALD_BLOCK) {
-                openRoleMenu(event.getPlayer());
-            }
-        }
-    }
-
-    private void openRoleMenu(Player player) {
-        Inventory menu = Bukkit.createInventory(null, 9, ChatColor.GOLD + "Activation des rôles");
+    // Ouvre le menu des rôles
+    public void openRoleMenu(Player player) {
+        Inventory menu = Bukkit.createInventory(null, 27, ChatColor.GOLD + "Activation des rôles");
 
         Set<String> roles = config.getConfigurationSection("roles").getKeys(false);
         int slot = 0;
@@ -55,33 +42,60 @@ public class RoleMenu implements Listener {
             menu.setItem(slot, item);
             slot++;
         }
+
+        // Ajout d'un bouton retour
+        ItemStack backButton = new ItemStack(Material.ARROW);
+        ItemMeta backMeta = backButton.getItemMeta();
+        if (backMeta != null) {
+            backMeta.setDisplayName(ChatColor.GRAY + "Retour");
+            backButton.setItemMeta(backMeta);
+        }
+        menu.setItem(26, backButton);
+
         player.openInventory(menu);
     }
+
+    // Gestion du clic sur le menu
     @EventHandler
-public void onInventoryClick(InventoryClickEvent event) {
-    if (!event.getView().getTitle().equals(ChatColor.GOLD + "Activation des rôles")) return;
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (!event.getView().getTitle().equals(ChatColor.GOLD + "Activation des rôles")) return;
 
-    event.setCancelled(true); // Empêche de prendre l'item
-    ItemStack clickedItem = event.getCurrentItem();
-    if (clickedItem == null || !clickedItem.hasItemMeta()) return;
+        event.setCancelled(true);
+        Player player = (Player) event.getWhoClicked();
+        ItemStack clickedItem = event.getCurrentItem();
+        if (clickedItem == null || !clickedItem.hasItemMeta()) return;
 
-    Player player = (Player) event.getWhoClicked();
-    String roleName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
+        String roleName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
 
-    // Inverse l'état du rôle
-    boolean newState = !config.getBoolean("roles." + roleName);
-    config.set("roles." + roleName, newState);
-    plugin.saveConfig();
+        if (roleName.equals("Retour")) {
+            player.closeInventory();
+            return;
+        }
 
-    // Met à jour l'item dans le menu
-    ItemStack newItem = new ItemStack(newState ? Material.LIME_DYE : Material.RED_DYE);
-    ItemMeta meta = newItem.getItemMeta();
-    if (meta != null) {
-        meta.setDisplayName((newState ? ChatColor.GREEN : ChatColor.RED) + roleName);
-        newItem.setItemMeta(meta);
+        boolean newState = !config.getBoolean("roles." + roleName);
+        config.set("roles." + roleName, newState);
+        plugin.saveConfig();
+
+        // Met à jour l'item dans le menu
+        ItemStack newItem = new ItemStack(newState ? Material.LIME_DYE : Material.RED_DYE);
+        ItemMeta meta = newItem.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName((newState ? ChatColor.GREEN : ChatColor.RED) + roleName);
+            newItem.setItemMeta(meta);
+        }
+        event.getInventory().setItem(event.getSlot(), newItem);
+
+        player.sendMessage("§aLe rôle " + roleName + " est maintenant " + (newState ? "activé" : "désactivé") + " !");
     }
-    event.getInventory().setItem(event.getSlot(), newItem);
 
-    player.sendMessage("§aLe rôle " + roleName + " est maintenant " + (newState ? "activé" : "désactivé") + " !");
-}
+    // Ajoute un bloc spécial qui ouvre le menu des rôles
+    @EventHandler
+    public void onBlockClick(PlayerInteractEvent event) {
+        if (event.getAction().toString().contains("RIGHT_CLICK")) {
+            ItemStack item = event.getItem();
+            if (item != null && item.getType() == Material.BOOK) {
+                openRoleMenu(event.getPlayer());
+            }
+        }
+    }
 }

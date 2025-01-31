@@ -1,9 +1,9 @@
-// src/main/java/me/uhcplugin/RoleManager.java
 package me.uhcplugin;
 
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+
 import java.util.*;
 
 public class RoleManager {
@@ -20,6 +20,7 @@ public class RoleManager {
         loadRolesFromConfig();
     }
 
+    // Charge les rôles depuis le fichier config.yml
     private void loadRolesFromConfig() {
         FileConfiguration config = plugin.getConfig();
         if (!config.contains("roles")) return;
@@ -33,6 +34,7 @@ public class RoleManager {
         }
     }
 
+    // Assigne les rôles aux joueurs
     public void assignRoles() {
         List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
         Collections.shuffle(players);
@@ -47,14 +49,17 @@ public class RoleManager {
         }
     }
 
+    // Récupère le rôle d'un joueur
     public String getRole(Player player) {
         return playerRoles.getOrDefault(player.getUniqueId(), "Sans rôle");
     }
+
+    // Sauvegarde l'état des rôles dans la config
     public void saveRolesToConfig() {
-    FileConfiguration config = plugin.getConfig();
-    for (Map.Entry<String, Boolean> entry : roleStatus.entrySet()) {
-        config.set("roles." + entry.getKey(), entry.getValue());
+        FileConfiguration config = plugin.getConfig();
+        for (Map.Entry<String, Boolean> entry : roleStatus.entrySet()) {
+            config.set("roles." + entry.getKey(), entry.getValue());
+        }
+        plugin.saveConfig();
     }
-    plugin.saveConfig();
-}
 }

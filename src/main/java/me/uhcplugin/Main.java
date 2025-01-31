@@ -26,6 +26,10 @@ public class Main extends JavaPlugin implements Listener {
         saveDefaultConfig();
         getServer().getPluginManager().registerEvents(this, this);
         getServer().getPluginManager().registerEvents(new RoleMenu(this), this);
+        if (GameManager.getGameState() == GameManager.GameState.STARTING) {
+            Bukkit.getLogger().info("Le jeu est en mode STARTING !");
+        }
+
     }
 
     @Override
