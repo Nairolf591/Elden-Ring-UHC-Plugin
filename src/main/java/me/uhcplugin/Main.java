@@ -185,14 +185,6 @@ public class Main extends JavaPlugin implements Listener {
         return item;
     }
     // src/main/java/me/uhcplugin/Main.java
-@Override
-public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-    if (command.getName().equalsIgnoreCase("startuhc")) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "Seuls les joueurs peuvent exécuter cette commande !");
-            return true;
-        }
-
         Player player = (Player) sender;
         if (!player.hasPermission("uhcplugin.startuhc")) {
             player.sendMessage(ChatColor.RED + "Permission insuffisante !");
@@ -212,5 +204,14 @@ public boolean onCommand(CommandSender sender, Command command, String label, St
         return true;
     }
     return false;
+}
+@Override
+public void onEnable() {
+    Bukkit.getLogger().info("[UHCPlugin] Le plugin est activé !");
+    GameManager.setGameState(GameManager.GameState.WAITING);
+    Bukkit.getLogger().info("[UHCPlugin] État du jeu défini sur WAITING.");
+    saveDefaultConfig();
+    getServer().getPluginManager().registerEvents(this, this);
+    getServer().getPluginManager().registerEvents(new RoleMenu(this), this); // Ajoutez cette ligne
 }
 }
