@@ -1,0 +1,19 @@
+name: UHCPlugin
+main: me.uhcplugin.Main
+version: 1.0
+api-version: 1.18
+commands:
+  uhctest:
+    description: Commande de test pour voir si le plugin fonctionne
+    usage: /uhctest
+    permission: uhcplugin.uhctest
+
+  startuhc:
+    permissions:
+      uhcplugin.startuhc:
+        description: Permission pour démarrer l'UHC
+        default: op
+
+
+
+

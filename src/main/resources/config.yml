@@ -1,0 +1,11 @@
+jump-location:
+  world: "world"
+  x: 0
+  y: 100
+  z: 0
+
+spawn-location:
+  world: "world"
+  x: 0
+  y: 64
+  z: 0
