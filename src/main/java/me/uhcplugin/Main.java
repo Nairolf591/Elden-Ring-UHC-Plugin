@@ -74,10 +74,23 @@ public class Main extends JavaPlugin implements Listener {
             GameManager.setGameState(GameManager.GameState.STARTING);
             Bukkit.broadcastMessage(ChatColor.GOLD + "L'UHC démarre dans 10 secondes !");
 
+            // Récupère le délai du PvP depuis la config (converti en secondes)
+            int pvpDelay = getConfig().getInt("pvp-timer", 10) * 60; // Convertit en secondes
             Bukkit.getScheduler().runTaskLater(this, () -> {
+                // Attribution des rôles après 10 secondes
                 new RoleManager(this).assignRoles();
                 GameManager.setGameState(GameManager.GameState.PLAYING);
                 Bukkit.broadcastMessage(ChatColor.GOLD + "Les rôles ont été attribués !");
+
+                // Annonce du délai d'activation du PvP
+                Bukkit.broadcastMessage(ChatColor.RED + "⚔ Le PvP sera activé dans " + (pvpDelay / 60) + " minutes !");
+
+                // Activation du PvP après le délai défini
+                Bukkit.getScheduler().runTaskLater(this, () -> {
+                    Bukkit.broadcastMessage(ChatColor.RED + "⚔ Le PvP est maintenant activé !");
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "gamerule pvp true");
+                }, pvpDelay * 20L); // Convertit en ticks (1 sec = 20 ticks)
+
             }, 200L); // 200 ticks = 10 secondes
 
             return true;
@@ -138,7 +151,34 @@ public class Main extends JavaPlugin implements Listener {
             handleMainMenuClick(player, clickedItem);
         } else if (inventoryTitle.equals(ChatColor.YELLOW + "Configuration UHC")) {
             event.setCancelled(true);
-            handleConfigMenuClick(player, clickedItem);
+
+            switch (clickedItem.getType()) {
+                case ARROW: // Retour au menu principal
+                    openMainMenu(player);
+                    break;
+
+                case DIAMOND_SWORD: // Gérer le timer du PvP
+                    if (!player.hasPermission("uhcplugin.config")) {
+                        player.sendMessage(ChatColor.RED + "❌ Tu n'as pas la permission de modifier la configuration !");
+                        return;
+                    }
+
+                    int currentPvpTime = getConfig().getInt("pvp-timer", 10); // Valeur par défaut 10 min
+
+                    if (event.isLeftClick()) {
+                        currentPvpTime += 1; // Augmente de 1 minute
+                    } else if (event.isRightClick() && currentPvpTime > 1) {
+                        currentPvpTime -= 1; // Diminue de 1 minute (minimum 1)
+                    }
+
+                    getConfig().set("pvp-timer", currentPvpTime);
+                    saveConfig();
+                    player.sendMessage(ChatColor.GREEN + "⏳ Temps avant PvP mis à jour : " + currentPvpTime + " minutes !");
+
+                    // ✅ Met à jour l'affichage dans le menu
+                    openConfigMenu(player);
+                    break;
+            }
 
             // Vérifie si le joueur clique sur le livre "Gérer les Rôles"
             if (clickedItem.getType() == Material.BOOK) {
@@ -254,14 +294,16 @@ public class Main extends JavaPlugin implements Listener {
     public void openConfigMenu(Player player) {
         Inventory configMenu = Bukkit.createInventory(null, 9, ChatColor.YELLOW + "Configuration UHC");
 
+        int currentPvpTime = getConfig().getInt("pvp-timer", 10); // Récupère la valeur actuelle du timer
+
         ItemStack borderSize = createItem(Material.BARRIER, ChatColor.RED + "Taille de la Bordure");
-        ItemStack pvpTimer = createItem(Material.DIAMOND_SWORD, ChatColor.RED + "Temps avant PvP");
-        ItemStack roleManager = createItem(BOOK, ChatColor.GOLD + "📜 Gérer les Rôles"); // ✅ Nouveau bouton
-        ItemStack backButton = createItem(ARROW, ChatColor.GRAY + "Retour");
+        ItemStack pvpTimer = createItem(Material.DIAMOND_SWORD, ChatColor.RED + "Temps avant PvP: " + ChatColor.GOLD + currentPvpTime + " min");
+        ItemStack roleManager = createItem(Material.BOOK, ChatColor.GOLD + "📜 Gérer les Rôles");
+        ItemStack backButton = createItem(Material.ARROW, ChatColor.GRAY + "Retour");
 
         configMenu.setItem(0, borderSize);
-        configMenu.setItem(1, pvpTimer);
-        configMenu.setItem(4, roleManager); // ✅ Ajout du bouton des rôles au centre
+        configMenu.setItem(1, pvpTimer); // 🛠️ L'épée permet maintenant de modifier le timer !
+        configMenu.setItem(4, roleManager);
         configMenu.setItem(8, backButton);
 
         player.openInventory(configMenu);
