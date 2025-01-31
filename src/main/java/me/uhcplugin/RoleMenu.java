@@ -1,3 +1,4 @@
+// src/main/java/me/uhcplugin/RoleMenu.java
 package me.uhcplugin;
 
 import org.bukkit.Bukkit;
@@ -31,7 +32,7 @@ public class RoleMenu implements Listener {
     public void onBlockClick(PlayerInteractEvent event) {
         if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
             Block block = event.getClickedBlock();
-            if (block != null && block.getType() == Material.EMERALD_BLOCK) { // Bloc interactif pour ouvrir le menu
+            if (block != null && block.getType() == Material.EMERALD_BLOCK) {
                 openRoleMenu(event.getPlayer());
             }
         }
