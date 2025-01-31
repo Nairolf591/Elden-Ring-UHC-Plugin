@@ -50,4 +50,11 @@ public class RoleManager {
     public String getRole(Player player) {
         return playerRoles.getOrDefault(player.getUniqueId(), "Sans rôle");
     }
+    public void saveRolesToConfig() {
+    FileConfiguration config = plugin.getConfig();
+    for (Map.Entry<String, Boolean> entry : roleStatus.entrySet()) {
+        config.set("roles." + entry.getKey(), entry.getValue());
+    }
+    plugin.saveConfig();
+}
 }
