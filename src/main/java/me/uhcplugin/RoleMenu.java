@@ -56,4 +56,31 @@ public class RoleMenu implements Listener {
         }
         player.openInventory(menu);
     }
+    @EventHandler
+public void onInventoryClick(InventoryClickEvent event) {
+    if (!event.getView().getTitle().equals(ChatColor.GOLD + "Activation des rôles")) return;
+
+    event.setCancelled(true); // Empêche de prendre l'item
+    ItemStack clickedItem = event.getCurrentItem();
+    if (clickedItem == null || !clickedItem.hasItemMeta()) return;
+
+    Player player = (Player) event.getWhoClicked();
+    String roleName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
+
+    // Inverse l'état du rôle
+    boolean newState = !config.getBoolean("roles." + roleName);
+    config.set("roles." + roleName, newState);
+    plugin.saveConfig();
+
+    // Met à jour l'item dans le menu
+    ItemStack newItem = new ItemStack(newState ? Material.LIME_DYE : Material.RED_DYE);
+    ItemMeta meta = newItem.getItemMeta();
+    if (meta != null) {
+        meta.setDisplayName((newState ? ChatColor.GREEN : ChatColor.RED) + roleName);
+        newItem.setItemMeta(meta);
+    }
+    event.getInventory().setItem(event.getSlot(), newItem);
+
+    player.sendMessage("§aLe rôle " + roleName + " est maintenant " + (newState ? "activé" : "désactivé") + " !");
+}
 }
