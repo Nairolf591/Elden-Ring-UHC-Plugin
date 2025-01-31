@@ -32,7 +32,6 @@ public class Main extends JavaPlugin implements Listener {
         if (GameManager.getGameState() == GameManager.GameState.STARTING) {
             Bukkit.getLogger().info("Le jeu est en mode STARTING !");
         }
-
     }
 
     @Override
@@ -74,13 +73,19 @@ public class Main extends JavaPlugin implements Listener {
             GameManager.setGameState(GameManager.GameState.STARTING);
             Bukkit.broadcastMessage(ChatColor.GOLD + "L'UHC démarre dans 10 secondes !");
 
-            // Récupère le délai du PvP depuis la config (converti en secondes)
+            // Récupère le délai du PvP et des rôles depuis la config
             int pvpDelay = getConfig().getInt("pvp-timer", 10) * 60; // Convertit en secondes
+            int roleDelay = getConfig().getInt("role-announcement-delay", 10); // Par défaut : 10s
+            long roleDelayTicks = roleDelay * 20L; // Convertit en ticks (1s = 20 ticks)
+
+// Annonce du délai avant l'attribution des rôles
+            Bukkit.broadcastMessage(ChatColor.YELLOW + "🎭 Les rôles seront révélés dans " + roleDelay + " secondes !");
+
             Bukkit.getScheduler().runTaskLater(this, () -> {
-                // Attribution des rôles après 10 secondes
+                // Attribution des rôles après le délai défini
                 new RoleManager(this).assignRoles();
                 GameManager.setGameState(GameManager.GameState.PLAYING);
-                Bukkit.broadcastMessage(ChatColor.GOLD + "Les rôles ont été attribués !");
+                Bukkit.broadcastMessage(ChatColor.GOLD + "🎭 Les rôles ont été attribués !");
 
                 // Annonce du délai d'activation du PvP
                 Bukkit.broadcastMessage(ChatColor.RED + "⚔ Le PvP sera activé dans " + (pvpDelay / 60) + " minutes !");
@@ -91,7 +96,7 @@ public class Main extends JavaPlugin implements Listener {
                     Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "gamerule pvp true");
                 }, pvpDelay * 20L); // Convertit en ticks (1 sec = 20 ticks)
 
-            }, 200L); // 200 ticks = 10 secondes
+            }, roleDelayTicks); // Applique le délai défini pour l'annonce des rôles
 
             return true;
         }
@@ -114,7 +119,6 @@ public class Main extends JavaPlugin implements Listener {
             player.sendMessage(ChatColor.RED + "Le monde spécifié dans la config n'existe pas !");
         }
     }
-
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
@@ -149,31 +153,53 @@ public class Main extends JavaPlugin implements Listener {
         if (inventoryTitle.equals(ChatColor.GOLD + "Menu UHC")) {
             event.setCancelled(true);
             handleMainMenuClick(player, clickedItem);
+
         } else if (inventoryTitle.equals(ChatColor.YELLOW + "Configuration UHC")) {
             event.setCancelled(true);
+            handleConfigMenuClick(player, clickedItem);
 
             switch (clickedItem.getType()) {
                 case ARROW: // Retour au menu principal
                     openMainMenu(player);
                     break;
 
-                case DIAMOND_SWORD: // Gérer le timer du PvP
+                case DIAMOND_SWORD: // ⚔️ Modifier le timer du PvP
                     if (!player.hasPermission("uhcplugin.config")) {
                         player.sendMessage(ChatColor.RED + "❌ Tu n'as pas la permission de modifier la configuration !");
                         return;
                     }
 
-                    int currentPvpTime = getConfig().getInt("pvp-timer", 10); // Valeur par défaut 10 min
-
+                    int currentPvpTime = getConfig().getInt("pvp-timer", 10); // Par défaut 10 min
                     if (event.isLeftClick()) {
-                        currentPvpTime += 1; // Augmente de 1 minute
+                        currentPvpTime += 1; // ⬆️ Augmente de 1 min
                     } else if (event.isRightClick() && currentPvpTime > 1) {
-                        currentPvpTime -= 1; // Diminue de 1 minute (minimum 1)
+                        currentPvpTime -= 1; // ⬇️ Diminue de 1 min (min 1)
                     }
 
                     getConfig().set("pvp-timer", currentPvpTime);
                     saveConfig();
                     player.sendMessage(ChatColor.GREEN + "⏳ Temps avant PvP mis à jour : " + currentPvpTime + " minutes !");
+
+                    // ✅ Met à jour l'affichage dans le menu
+                    openConfigMenu(player);
+                    break;
+
+                case PAPER: // 📜 Modifier le délai d'annonce des rôles
+                    if (!player.hasPermission("uhcplugin.config")) {
+                        player.sendMessage(ChatColor.RED + "❌ Tu n'as pas la permission de modifier la configuration !");
+                        return;
+                    }
+
+                    int currentRoleTime = getConfig().getInt("role-announcement-delay", 10); // Par défaut 10 sec
+                    if (event.isLeftClick()) {
+                        currentRoleTime += 5; // ⬆️ Augmente de 5 sec
+                    } else if (event.isRightClick() && currentRoleTime > 5) {
+                        currentRoleTime -= 5; // ⬇️ Diminue de 5 sec (min 5)
+                    }
+
+                    getConfig().set("role-announcement-delay", currentRoleTime);
+                    saveConfig();
+                    player.sendMessage(ChatColor.LIGHT_PURPLE + "🎭 Temps avant annonce des rôles mis à jour : " + currentRoleTime + " secondes !");
 
                     // ✅ Met à jour l'affichage dans le menu
                     openConfigMenu(player);
@@ -188,6 +214,7 @@ public class Main extends JavaPlugin implements Listener {
                     player.sendMessage(ChatColor.RED + "❌ Tu n'as pas la permission d'accéder à la gestion des rôles !");
                 }
             }
+
         } else if (inventoryTitle.equals(ChatColor.GOLD + "Activation des rôles")) {
             event.setCancelled(true); // Empêche de déplacer les items
 
@@ -230,23 +257,28 @@ public class Main extends JavaPlugin implements Listener {
             player.sendMessage(ChatColor.RED + "Tu n'as pas la permission de modifier la configuration !");
             return;
         }
-        if (clickedItem.getType() == ARROW) {
-            openMainMenu(player);
-        }
+
         String itemName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
 
         if (itemName.equals("Taille de la Bordure")) {
             int currentSize = getConfig().getInt("border-size", 100);
-            int newSize = (currentSize == 100) ? 50 : 100; // Alterne entre 100 et 50
+            int newSize = (currentSize == 100) ? 50 : 100; // Alterne entre 100 et 50 blocs
             getConfig().set("border-size", newSize);
+            saveConfig();
+
+            // Applique la nouvelle taille de la bordure
+            Bukkit.getWorld("world").getWorldBorder().setSize(newSize);
+
             player.sendMessage(ChatColor.GREEN + "Taille de la bordure mise à jour : " + newSize);
-        } else if (itemName.equals("Temps avant PvP")) {
-            int currentTime = getConfig().getInt("pvp-timer", 10);
-            int newTime = (currentTime == 10) ? 5 : 10; // Alterne entre 10 et 5 min
-            getConfig().set("pvp-timer", newTime);
-            player.sendMessage(ChatColor.GREEN + "Temps avant PvP mis à jour : " + newTime + " minutes");
         }
-        saveConfig(); // ✅ Sauvegarde la config après modification
+        else if (itemName.equals("Temps avant PvP")) {
+            int currentTime = getConfig().getInt("pvp-timer", 10);
+            int newTime = (currentTime == 10) ? 5 : 10;
+            getConfig().set("pvp-timer", newTime);
+            saveConfig();
+
+            player.sendMessage(ChatColor.GREEN + "Temps avant PvP mis à jour : " + newTime + " minutes !");
+        }
     }
 
     @EventHandler
@@ -294,15 +326,21 @@ public class Main extends JavaPlugin implements Listener {
     public void openConfigMenu(Player player) {
         Inventory configMenu = Bukkit.createInventory(null, 9, ChatColor.YELLOW + "Configuration UHC");
 
-        int currentPvpTime = getConfig().getInt("pvp-timer", 10); // Récupère la valeur actuelle du timer
+        // Récupère les valeurs actuelles pour l'affichage
+        int currentPvpTime = getConfig().getInt("pvp-timer", 10);
+        int currentRoleTime = getConfig().getInt("role-announcement-delay", 10);
 
+        // Création des items avec les valeurs dynamiques
         ItemStack borderSize = createItem(Material.BARRIER, ChatColor.RED + "Taille de la Bordure");
         ItemStack pvpTimer = createItem(Material.DIAMOND_SWORD, ChatColor.RED + "Temps avant PvP: " + ChatColor.GOLD + currentPvpTime + " min");
+        ItemStack roleTimer = createItem(Material.PAPER, ChatColor.LIGHT_PURPLE + "Temps avant annonce des rôles: " + ChatColor.GOLD + currentRoleTime + " sec");
         ItemStack roleManager = createItem(Material.BOOK, ChatColor.GOLD + "📜 Gérer les Rôles");
         ItemStack backButton = createItem(Material.ARROW, ChatColor.GRAY + "Retour");
 
+        // Placement des items dans l'inventaire
         configMenu.setItem(0, borderSize);
-        configMenu.setItem(1, pvpTimer); // 🛠️ L'épée permet maintenant de modifier le timer !
+        configMenu.setItem(1, pvpTimer);
+        configMenu.setItem(2, roleTimer); // ✅ Ajout ici
         configMenu.setItem(4, roleManager);
         configMenu.setItem(8, backButton);
 

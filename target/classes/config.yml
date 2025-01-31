@@ -26,5 +26,8 @@ roles:
   D_témoin_de_la_mort: true
 
 pvp-timer: 10  # Temps en minutes avant l'activation du PvP
+border-size: 100
+role-announcement-delay: 10
+
 
 
