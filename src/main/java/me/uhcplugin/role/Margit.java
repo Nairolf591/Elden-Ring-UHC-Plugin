@@ -1,0 +1,111 @@
+package me.uhcplugin.role;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.util.Vector;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+public class Margit implements Listener {
+    private final Player player;
+    private final Map<UUID, Long> cooldowns = new HashMap<>(); // Stocke les cooldowns par joueur
+    private static final long COOLDOWN_TIME = 180 * 1000; // 3 minutes en millisecondes
+    private static final Material HAMMER_ITEM = Material.DIAMOND_AXE; // Item pour activer la compétence
+
+    public Margit(Player player) {
+        this.player = player;
+        applyConstantEffects(); // Applique l'effet de force constant
+        giveHammerItem(); // Donne l'item spécial après 2 minutes
+    }
+
+    // Applique l'effet de force de 10% (amplitude 1 = 20%, donc 0.5 pour 10%)
+    private void applyConstantEffects() {
+        player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, Integer.MAX_VALUE, 0, false, false));
+    }
+
+    // Donne l'item spécial après 2 minutes
+    private void giveHammerItem() {
+        Bukkit.getScheduler().runTaskLater(player.getServer().getPluginManager().getPlugin("UHCPlugin"), () -> {
+            ItemStack hammer = new ItemStack(HAMMER_ITEM);
+            ItemMeta meta = hammer.getItemMeta();
+            if (meta != null) {
+                meta.setDisplayName(ChatColor.GOLD + "Marteau de Margit");
+                hammer.setItemMeta(meta);
+            }
+            player.getInventory().addItem(hammer);
+            player.sendMessage(ChatColor.GOLD + "Vous avez reçu le Marteau de Margit ! Utilisez-le pour sauter.");
+        }, 2400L); // 2 minutes = 120 secondes = 2400 ticks
+    }
+
+    // Gère l'activation de la compétence via un clic droit avec l'item spécial
+    @EventHandler
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        if (!event.getPlayer().equals(player)) return; // Vérifie que c'est bien Margit
+        if (event.getItem() == null || event.getItem().getType() != HAMMER_ITEM) return; // Vérifie l'item
+
+        // Vérifie le cooldown
+        long currentTime = System.currentTimeMillis();
+        long lastUsed = cooldowns.getOrDefault(player.getUniqueId(), 0L);
+
+        if (currentTime - lastUsed < COOLDOWN_TIME) {
+            long remainingTime = (COOLDOWN_TIME - (currentTime - lastUsed)) / 1000;
+            player.sendMessage(ChatColor.RED + "Vous devez attendre " + remainingTime + " secondes avant de réutiliser cette compétence.");
+            return;
+        }
+
+        // Active la compétence
+        performHammerJump();
+        cooldowns.put(player.getUniqueId(), currentTime); // Met à jour le cooldown
+    }
+
+    // Effectue le saut avec le marteau
+    private void performHammerJump() {
+        // Vecteur de direction pour le saut
+        Vector direction = player.getLocation().getDirection().multiply(2).setY(1.5);
+        player.setVelocity(direction);
+
+        // Sons et particules pendant le saut
+        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_RAVAGER_ROAR, 1.0f, 1.0f);
+        player.getWorld().spawnParticle(Particle.CLOUD, player.getLocation(), 30, 0.5, 0.5, 0.5, 0.1);
+
+        // Planifie l'effet de retombée après 1 seconde (20 ticks)
+        Bukkit.getScheduler().runTaskLater(player.getServer().getPluginManager().getPlugin("UHCPlugin"), this::hammerLanding, 20);
+    }
+
+    // Effet de retombée du saut
+    private void hammerLanding() {
+        Location location = player.getLocation();
+
+        // Sons et particules à la retombée
+        player.getWorld().playSound(location, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
+        player.getWorld().spawnParticle(Particle.EXPLOSION_LARGE, location, 10, 2, 0.5, 2, 0.1);
+
+        // Inflige des dégâts aux joueurs proches
+        Collection<Player> nearbyPlayers = player.getWorld().getNearbyEntities(location, 5, 3, 5)
+                .stream()
+                .filter(entity -> entity instanceof Player)
+                .map(entity -> (Player) entity)
+                .toList();
+
+        for (Player nearbyPlayer : nearbyPlayers) {
+            if (!nearbyPlayer.equals(player)) {
+                nearbyPlayer.damage(6.0); // 3 cœurs de dégâts
+                nearbyPlayer.setVelocity(nearbyPlayer.getLocation().toVector().subtract(location.toVector()).normalize().multiply(1.5));
+            }
+        }
+    }
+}
