@@ -46,6 +46,7 @@ public class Main extends JavaPlugin implements Listener {
 
             getServer().getPluginManager().registerEvents(this, this);
             getServer().getPluginManager().registerEvents(new RoleMenu(this), this);
+            
 
             // ✅ Vérification pour éviter d'appeler updateAllScoreboards() sur null
             if (scoreboardManager != null) {
