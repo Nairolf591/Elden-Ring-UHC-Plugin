@@ -13,6 +13,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
@@ -26,7 +27,7 @@ import java.util.UUID;
 public class Margit implements Listener {
     private final Player player;
     private final Map<UUID, Long> cooldowns = new HashMap<>();
-    private static final long COOLDOWN_TIME = 180 * 1000;
+    private static final long COOLDOWN_TIME = 180 * 1000; // 3 minutes en millisecondes
     private static final Material HAMMER_ITEM = Material.GOLDEN_AXE;
 
     public Margit(Player player) {
@@ -52,98 +53,94 @@ public class Margit implements Listener {
             
             if (meta != null) {
                 meta.setDisplayName(ChatColor.GOLD + "Marteau de Margit");
-                meta.addEnchant(Enchantment.LUCK, 1, true); // Enchantement visible
-                meta.addItemFlags(org.bukkit.inventory.ItemFlag.HIDE_ENCHANTS);
+                meta.addEnchant(Enchantment.LUCK, 1, true);
+                meta.addItemFlags(ItemFlag.HIDE_ENCHANTS); // Enchantement visible mais texte caché
                 hammer.setItemMeta(meta);
             }
             
             player.getInventory().addItem(hammer);
-            player.sendMessage(ChatColor.GOLD + "§lMARTEAU DISPONIBLE ! Clic droit pour sauter !");
+            player.sendMessage(ChatColor.GOLD + "§l➤ Votre marteau est prêt ! Clic pour sauter !");
         }, 200L);
     }
 
-    // Détection simplifiée pour Bedrock/Java
     @EventHandler
-    public void onPlayerInteract(PlayerInteractEvent event) {
-        if (!event.getPlayer().equals(player)) return;
-        
+    public void onHammerUse(PlayerInteractEvent event) {
+        Player user = event.getPlayer();
+        if (!user.getUniqueId().equals(player.getUniqueId())) return;
+
         ItemStack item = event.getItem();
         if (item == null || 
             item.getType() != HAMMER_ITEM || 
             !item.hasItemMeta() || 
+            !item.getItemMeta().hasDisplayName() || 
             !item.getItemMeta().getDisplayName().equals(ChatColor.GOLD + "Marteau de Margit")) {
             return;
         }
 
-        // Détection clic droit uniquement (même sur Bedrock)
-        if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-            handleSkillActivation();
-            event.setCancelled(true); // Empêche l'interaction avec les blocs
+        // Détection de tous types de clics
+        if (event.getAction() == Action.LEFT_CLICK_AIR || 
+            event.getAction() == Action.LEFT_CLICK_BLOCK ||
+            event.getAction() == Action.RIGHT_CLICK_AIR || 
+            event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            
+            handleSkillActivation(user);
+            event.setCancelled(true); // Bloque l'action normale
         }
     }
 
-    private void handleSkillActivation() {
+    private void handleSkillActivation(Player user) {
         long currentTime = System.currentTimeMillis();
-        long lastUsed = cooldowns.getOrDefault(player.getUniqueId(), 0L);
+        long lastUsed = cooldowns.getOrDefault(user.getUniqueId(), 0L);
 
         if (currentTime - lastUsed < COOLDOWN_TIME) {
             long remaining = (COOLDOWN_TIME - (currentTime - lastUsed)) / 1000;
-            player.sendMessage(ChatColor.RED + "§lRecharge: " + remaining + "s");
+            user.sendMessage(ChatColor.RED + "§l⌛ Recharge : " + remaining + "s");
             return;
         }
 
-        cooldowns.put(player.getUniqueId(), currentTime);
-        performHammerJump();
+        cooldowns.put(user.getUniqueId(), currentTime);
+        performHammerJump(user);
     }
 
-    private void performHammerJump() {
-        // Boost vertical + horizontal
-        Vector boost = player.getLocation().getDirection()
+    private void performHammerJump(Player user) {
+        // Boost directionnel
+        Vector boost = user.getLocation().getDirection()
             .multiply(2.0)
             .setY(1.2);
         
-        player.setVelocity(boost);
-        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_FLAP, 1.0f, 0.5f);
-        
-        // Effets visuels pendant le saut
-        Bukkit.getScheduler().runTaskLater(Bukkit.getPluginManager().getPlugin("UHCPlugin"), () -> {
-            player.getWorld().spawnParticle(
-                Particle.FLAME, 
-                player.getLocation(), 
-                30, 
-                0.5, 
-                0.5, 
-                0.5, 
-                0.1
-            );
-        }, 5L);
-
-        // Retombée après 1 seconde
-        Bukkit.getScheduler().runTaskLater(Bukkit.getPluginManager().getPlugin("UHCPlugin"), this::hammerImpact, 20);
-    }
-
-    private void hammerImpact() {
-        Location impactPoint = player.getLocation();
+        user.setVelocity(boost);
         
         // Effets sonores/visuels
-        player.getWorld().playSound(impactPoint, Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1.0f, 0.7f);
-        player.getWorld().spawnParticle(Particle.EXPLOSION_HUGE, impactPoint, 1);
+        user.getWorld().playSound(user.getLocation(), Sound.ENTITY_ENDER_DRAGON_FLAP, 1.0f, 0.5f);
+        user.getWorld().spawnParticle(Particle.SMOKE_LARGE, user.getLocation(), 15, 0.5, 0.5, 0.5, 0.2);
+
+        // Retombée après 1 seconde
+        Bukkit.getScheduler().runTaskLater(Bukkit.getPluginManager().getPlugin("UHCPlugin"), () -> {
+            hammerImpact(user.getLocation());
+        }, 20);
+    }
+
+    private void hammerImpact(Location impactPoint) {
+        // Explosion visuelle
+        impactPoint.getWorld().spawnParticle(Particle.EXPLOSION_HUGE, impactPoint, 1);
+        impactPoint.getWorld().playSound(impactPoint, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 0.8f);
 
         // Dégâts zone + knockback
-        for (Entity entity : player.getWorld().getNearbyEntities(impactPoint, 5, 3, 5)) {
+        for (Entity entity : impactPoint.getWorld().getNearbyEntities(impactPoint, 5, 3, 5)) {
             if (entity.equals(player)) continue;
             
             Vector knockback = entity.getLocation()
                 .toVector()
                 .subtract(impactPoint.toVector())
                 .normalize()
-                .multiply(1.8)
-                .setY(0.6);
+                .multiply(1.5)
+                .setY(0.4);
             
             entity.setVelocity(knockback);
             
             if (entity instanceof Player) {
-                ((Player) entity).damage(6.0);
+                ((Player) entity).damage(6.0); // 3 cœurs
+                ((Player) entity).sendMessage(ChatColor.RED + "§l☠ Frappé par Margit !");
             }
         }
     }
