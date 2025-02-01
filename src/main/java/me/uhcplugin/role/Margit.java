@@ -1,6 +1,7 @@
 package me.uhcplugin.role;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor; // Import manquant ajouté ici
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -43,11 +44,11 @@ public class Margit implements Listener {
             ItemStack hammer = new ItemStack(HAMMER_ITEM);
             ItemMeta meta = hammer.getItemMeta();
             if (meta != null) {
-                meta.setDisplayName(ChatColor.GOLD + "Marteau de Margit");
+                meta.setDisplayName(ChatColor.GOLD + "Marteau de Margit"); // Utilisation de ChatColor
                 hammer.setItemMeta(meta);
             }
             player.getInventory().addItem(hammer);
-            player.sendMessage(ChatColor.GOLD + "Vous avez reçu le Marteau de Margit ! Utilisez-le pour sauter.");
+            player.sendMessage(ChatColor.GOLD + "Vous avez reçu le Marteau de Margit ! Utilisez-le pour sauter."); // Utilisation de ChatColor
         }, 2400L); // 2 minutes = 120 secondes = 2400 ticks
     }
 
@@ -63,7 +64,7 @@ public class Margit implements Listener {
 
         if (currentTime - lastUsed < COOLDOWN_TIME) {
             long remainingTime = (COOLDOWN_TIME - (currentTime - lastUsed)) / 1000;
-            player.sendMessage(ChatColor.RED + "Vous devez attendre " + remainingTime + " secondes avant de réutiliser cette compétence.");
+            player.sendMessage(ChatColor.RED + "Vous devez attendre " + remainingTime + " secondes avant de réutiliser cette compétence."); // Utilisation de ChatColor
             return;
         }
 
