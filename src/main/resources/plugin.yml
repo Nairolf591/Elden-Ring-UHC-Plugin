@@ -33,6 +33,15 @@ commands:
     usage: /spawn
     permission: uhcplugin.spawn
 
+  enduhc:
+    description: "Forcer la fin de la partie UHC"
+    usage: "/enduhc"
+    permission: uhcplugin.enduhc
+  permissions:
+    uhcplugin.enduhc:
+      description: "Permet de forcer la fin de la partie"
+      default: op
+
 
 
 
