@@ -1,7 +1,6 @@
 package me.uhcplugin;
+
 import me.uhcplugin.role.Margit;
-
-
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -41,8 +40,6 @@ public class RoleManager {
         List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
         Collections.shuffle(players);
         Collections.shuffle(availableRoles);
-        if (role.equals("Margit")) {
-    new Margit(player); // Initialise les effets et compétences de Margit
 
         int roleCount = Math.min(players.size(), availableRoles.size());
         for (int i = 0; i < roleCount; i++) {
@@ -50,6 +47,11 @@ public class RoleManager {
             String role = availableRoles.get(i);
             playerRoles.put(player.getUniqueId(), role);
             player.sendMessage("§6[UHC] §aTu es " + role + " !");
+
+            // Initialise les effets et compétences de Margit si le rôle est attribué
+            if (role.equals("Margit")) {
+                new Margit(player);
+            }
         }
     }
 
