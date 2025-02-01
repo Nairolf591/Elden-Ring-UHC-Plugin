@@ -3,6 +3,7 @@ main: me.uhcplugin.Main
 version: 1.0
 api-version: 1.18
 commands:
+
   uhctest:
     description: Commande de test pour voir si le plugin fonctionne
     usage: /uhctest
@@ -28,6 +29,7 @@ commands:
     description: Téléporte le joueur au jump
     usage: /jump
     permission: uhcplugin.jump
+
   spawn:
     description: Téléporte le joueur au spawn
     usage: /spawn

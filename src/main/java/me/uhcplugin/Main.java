@@ -26,33 +26,39 @@ public class Main extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
-        instance = this; // Stocke l'instance du plugin
-        Bukkit.getLogger().info("[UHCPlugin] Le plugin est activé !");
-        saveDefaultConfig();
-
-        // ✅ Charge l'état de la partie depuis la config
-        String savedState = getConfig().getString("game-state", "WAITING");
+        instance = this;
+        Bukkit.getLogger().info("[UHCPlugin] Le plugin est en cours d'activation...");
 
         try {
-            GameManager.setGameState(GameManager.GameState.valueOf(savedState));
-        } catch (IllegalArgumentException e) {
-            Bukkit.getLogger().warning("[UHCPlugin] 🚨 État inconnu dans la config ! Réinitialisation à WAITING.");
-            GameManager.setGameState(GameManager.GameState.WAITING);
+            saveDefaultConfig();
+
+            // ✅ Initialiser ScoreboardManager AVANT GameManager
+            scoreboardManager = new ScoreboardManager(this);
+
+            // ✅ Charger l'état du jeu APRÈS avoir initialisé ScoreboardManager
+            String savedState = getConfig().getString("game-state", "WAITING");
+            try {
+                GameManager.setGameState(GameManager.GameState.valueOf(savedState));
+            } catch (IllegalArgumentException e) {
+                Bukkit.getLogger().warning("[UHCPlugin] 🚨 État inconnu dans la config ! Réinitialisation à WAITING.");
+                GameManager.setGameState(GameManager.GameState.WAITING);
+            }
+
+            getServer().getPluginManager().registerEvents(this, this);
+            getServer().getPluginManager().registerEvents(new RoleMenu(this), this);
+
+            // ✅ Vérification pour éviter d'appeler updateAllScoreboards() sur null
+            if (scoreboardManager != null) {
+                Bukkit.getOnlinePlayers().forEach(scoreboardManager::setPlayerScoreboard);
+            } else {
+                Bukkit.getLogger().severe("[UHCPlugin] ❌ ScoreboardManager est NULL après initialisation !");
+            }
+
+            Bukkit.getLogger().info("[UHCPlugin] ✅ Activation terminée !");
+        } catch (Exception e) {
+            Bukkit.getLogger().severe("[UHCPlugin] ❌ Une erreur est survenue au démarrage !");
+            e.printStackTrace();
         }
-
-        // 🔄 Vérifie que l'état ne reste pas en ENDED après un reload
-        if (GameManager.getGameState() == GameManager.GameState.ENDED) {
-            GameManager.setGameState(GameManager.GameState.WAITING);
-        }
-
-        getServer().getPluginManager().registerEvents(this, this);
-        getServer().getPluginManager().registerEvents(new RoleMenu(this), this);
-        scoreboardManager = new ScoreboardManager(this);
-
-        // 🔄 Met à jour le scoreboard de tous les joueurs connectés après un reload
-        Bukkit.getOnlinePlayers().forEach(scoreboardManager::setPlayerScoreboard);
-
-        Bukkit.getLogger().info("[UHCPlugin] 🎯 État actuel du jeu : " + GameManager.getGameState());
     }
 
     @Override
@@ -67,6 +73,16 @@ public class Main extends JavaPlugin implements Listener {
             return true;
         }
         Player player = (Player) sender;
+
+        if (command.getName().equalsIgnoreCase("jump")) {
+            teleportPlayer(player, "jump-location");
+            return true;
+        }
+
+        if (command.getName().equalsIgnoreCase("spawn")) {
+            teleportPlayer(player, "spawn-location");
+            return true;
+        }
 
         if (command.getName().equalsIgnoreCase("startuhc")) {
             if (!player.hasPermission("uhcplugin.startuhc")) {
@@ -124,19 +140,28 @@ public class Main extends JavaPlugin implements Listener {
     }
 
     private void teleportPlayer(Player player, String locationKey) {
+        if (!getConfig().contains(locationKey)) {
+            player.sendMessage(ChatColor.RED + "❌ La localisation '" + locationKey + "' n'est pas définie !");
+            return;
+        }
+
         String worldName = getConfig().getString(locationKey + ".world");
+        World world = Bukkit.getWorld(worldName);
+
+        if (world == null) {
+            player.sendMessage(ChatColor.RED + "❌ Le monde '" + worldName + "' n'existe pas !");
+            return;
+        }
+
         double x = getConfig().getDouble(locationKey + ".x");
         double y = getConfig().getDouble(locationKey + ".y");
         double z = getConfig().getDouble(locationKey + ".z");
-        float yaw = (float) getConfig().getDouble("jump-location.yaw") + 230;
+        float yaw = (float) getConfig().getDouble(locationKey + ".yaw");
         float pitch = (float) getConfig().getDouble(locationKey + ".pitch");
 
-        if (worldName != null) {
-            player.teleport(new Location(Bukkit.getWorld(worldName), x, y, z, yaw, pitch));
-            player.sendMessage(ChatColor.GREEN + "Téléporté à " + locationKey.replace("-", " ") + " !");
-        } else {
-            player.sendMessage(ChatColor.RED + "Le monde spécifié dans la config n'existe pas !");
-        }
+        Location teleportLocation = new Location(world, x, y, z, yaw, pitch);
+        player.teleport(teleportLocation);
+        player.sendMessage(ChatColor.GREEN + "✅ Téléporté à " + locationKey.replace("-", " ") + " !");
     }
 
     @EventHandler
@@ -408,9 +433,19 @@ public class Main extends JavaPlugin implements Listener {
             return;
         }
 
-        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "mv delete uhc");
+        // 📌 Téléporte tous les joueurs vers le spawn du monde principal avant la suppression
+        World mainWorld = Bukkit.getWorlds().get(0); // Prend le premier monde du serveur
+        Location safeSpawn = mainWorld.getSpawnLocation();
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            player.teleport(safeSpawn);
+            player.sendMessage(ChatColor.YELLOW + "🚀 Téléportation temporaire pendant la réinitialisation du monde UHC...");
+        }
+
+        // 🔴 Supprimer le monde UHC de Multiverse
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "mv remove uhc");
         deleteWorld(uhcWorld);
 
+        // ✅ Restaurer le backup
         try {
             copyDirectory(backupWorld, uhcWorld);
             Bukkit.getLogger().info("[UHCPlugin] ✅ Le monde UHC a été restauré avec succès !");
@@ -419,6 +454,7 @@ public class Main extends JavaPlugin implements Listener {
             e.printStackTrace();
         }
 
+        // 🔄 Réimporter le monde avec Multiverse
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "mv import uhc normal");
         Bukkit.broadcastMessage(ChatColor.GREEN + "🌍 Le monde UHC a été restauré !");
     }
@@ -466,5 +502,9 @@ public class Main extends JavaPlugin implements Listener {
 
     public static Main getInstance() {
         return instance;
+    }
+
+    public ScoreboardManager getScoreboardManager() {
+        return scoreboardManager;
     }
 }
