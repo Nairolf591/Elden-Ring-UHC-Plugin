@@ -22,6 +22,8 @@ import static org.bukkit.Material.BOOK;
 
 public class Main extends JavaPlugin implements Listener {
 
+    private ScoreboardManager scoreboardManager;
+
     @Override
     public void onEnable() {
         Bukkit.getLogger().info("[UHCPlugin] Le plugin est activé !");
@@ -29,6 +31,7 @@ public class Main extends JavaPlugin implements Listener {
         saveDefaultConfig();
         getServer().getPluginManager().registerEvents(this, this);
         getServer().getPluginManager().registerEvents(new RoleMenu(this), this);
+        scoreboardManager = new ScoreboardManager(this);
         if (GameManager.getGameState() == GameManager.GameState.STARTING) {
             Bukkit.getLogger().info("Le jeu est en mode STARTING !");
         }
@@ -127,6 +130,8 @@ public class Main extends JavaPlugin implements Listener {
             player.getInventory().clear();
             giveCompass(player);
         }
+        // 🔹 Applique le scoreboard au joueur
+        scoreboardManager.setPlayerScoreboard(player);
     }
 
     private void giveCompass(Player player) {
@@ -237,6 +242,9 @@ public class Main extends JavaPlugin implements Listener {
                 }
                 event.getInventory().setItem(event.getSlot(), newItem);
                 player.sendMessage(ChatColor.GREEN + "Le rôle " + roleName + " est maintenant " + (newState ? "activé" : "désactivé") + " !");
+
+                // ✅ Mise à jour du scoreboard pour tous les joueurs
+                scoreboardManager.updateAllScoreboards();
             }
         }
     }
@@ -276,6 +284,9 @@ public class Main extends JavaPlugin implements Listener {
             int newTime = (currentTime == 10) ? 5 : 10;
             getConfig().set("pvp-timer", newTime);
             saveConfig();
+
+            // 🔹 Met à jour le scoreboard après modification des rôles ou du PvP
+            scoreboardManager.updateScoreboard(player);
 
             player.sendMessage(ChatColor.GREEN + "Temps avant PvP mis à jour : " + newTime + " minutes !");
         }
@@ -347,7 +358,6 @@ public class Main extends JavaPlugin implements Listener {
         player.openInventory(configMenu);
     }
 
-
     private ItemStack createItem(Material material, String name) {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
@@ -357,4 +367,6 @@ public class Main extends JavaPlugin implements Listener {
         }
         return item;
     }
+
+
 }

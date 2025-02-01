@@ -1,5 +1,6 @@
 me\uhcplugin\Main.class
 me\uhcplugin\Main$1.class
+me\uhcplugin\ScoreboardManager.class
 me\uhcplugin\RoleManager.class
 me\uhcplugin\GameManager$GameState.class
 me\uhcplugin\GameManager.class
