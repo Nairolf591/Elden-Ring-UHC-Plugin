@@ -26,6 +26,7 @@ public class Main extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
+      getServer().getPluginManager().registerEvents(new Margit(player), this);
         Bukkit.getLogger().info("[UHCPlugin] Le plugin est activé !");
         GameManager.setGameState(GameManager.GameState.WAITING);
         saveDefaultConfig();
