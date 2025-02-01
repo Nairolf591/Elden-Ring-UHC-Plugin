@@ -128,11 +128,6 @@ public class Main extends JavaPlugin implements Listener {
             GameManager.setGameState(GameManager.GameState.ENDED);
             Bukkit.broadcastMessage(ChatColor.RED + "🏁 La partie a été forcée à se terminer par " + player.getName() + " !");
 
-            // ⏳ Ajoute un délai avant de reset le monde (ex: 10 secondes)
-            Bukkit.getScheduler().runTaskLater(this, () -> {
-                resetUHCWorld();
-            }, 200L); // 10 secondes
-
             return true;
         }
 
