@@ -1,5 +1,8 @@
 package me.uhcplugin;
 
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+
 public class GameManager {
 
     public enum GameState {
@@ -19,6 +22,16 @@ public class GameManager {
     // Définir un nouvel état pour la partie
     public static void setGameState(GameState state) {
         currentState = state;
+        Bukkit.broadcastMessage(ChatColor.RED + "📢 L'état du jeu est maintenant : " + state);
+
+        if (state == GameState.ENDED) {
+            Bukkit.broadcastMessage(ChatColor.RED + "🏁 La partie est terminée !");
+
+            // ⏳ Petite pause avant de reset la map (attend 10 secondes)
+            Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
+                Main.getInstance().resetUHCWorld();
+            }, 200L); // 200 ticks = 10 secondes
+        }
     }
 
     // Vérifie si la partie est en attente
@@ -35,4 +48,6 @@ public class GameManager {
     public static boolean isEnded() {
         return currentState == GameState.ENDED;
     }
+
+
 }

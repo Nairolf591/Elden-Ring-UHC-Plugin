@@ -1,9 +1,6 @@
 package me.uhcplugin;
 
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -16,31 +13,51 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
-
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import java.io.*;
 import static org.bukkit.Material.ARROW;
 import static org.bukkit.Material.BOOK;
 
 public class Main extends JavaPlugin implements Listener {
 
+    private static Main instance;
     private ScoreboardManager scoreboardManager;
 
     @Override
     public void onEnable() {
+        instance = this; // Stocke l'instance du plugin
         Bukkit.getLogger().info("[UHCPlugin] Le plugin est activé !");
-        GameManager.setGameState(GameManager.GameState.WAITING);
         saveDefaultConfig();
+
+        // ✅ Charge l'état de la partie depuis la config
+        String savedState = getConfig().getString("game-state", "WAITING");
+
+        try {
+            GameManager.setGameState(GameManager.GameState.valueOf(savedState));
+        } catch (IllegalArgumentException e) {
+            Bukkit.getLogger().warning("[UHCPlugin] 🚨 État inconnu dans la config ! Réinitialisation à WAITING.");
+            GameManager.setGameState(GameManager.GameState.WAITING);
+        }
+
+        // 🔄 Vérifie que l'état ne reste pas en ENDED après un reload
+        if (GameManager.getGameState() == GameManager.GameState.ENDED) {
+            GameManager.setGameState(GameManager.GameState.WAITING);
+        }
+
         getServer().getPluginManager().registerEvents(this, this);
         getServer().getPluginManager().registerEvents(new RoleMenu(this), this);
         scoreboardManager = new ScoreboardManager(this);
-        if (GameManager.getGameState() == GameManager.GameState.STARTING) {
-            Bukkit.getLogger().info("Le jeu est en mode STARTING !");
-        }
+
+        // 🔄 Met à jour le scoreboard de tous les joueurs connectés après un reload
+        Bukkit.getOnlinePlayers().forEach(scoreboardManager::setPlayerScoreboard);
+
+        Bukkit.getLogger().info("[UHCPlugin] 🎯 État actuel du jeu : " + GameManager.getGameState());
     }
 
     @Override
     public void onDisable() {
         Bukkit.getLogger().info("[UHCPlugin] Le plugin est désactivé !");
-        GameManager.setGameState(GameManager.GameState.ENDED);
     }
 
     @Override
@@ -49,18 +66,7 @@ public class Main extends JavaPlugin implements Listener {
             sender.sendMessage(ChatColor.RED + "Seuls les joueurs peuvent exécuter cette commande !");
             return true;
         }
-
         Player player = (Player) sender;
-
-        if (command.getName().equalsIgnoreCase("jump")) {
-            teleportPlayer(player, "jump-location");
-            return true;
-        }
-
-        if (command.getName().equalsIgnoreCase("spawn")) {
-            teleportPlayer(player, "spawn-location");
-            return true;
-        }
 
         if (command.getName().equalsIgnoreCase("startuhc")) {
             if (!player.hasPermission("uhcplugin.startuhc")) {
@@ -73,33 +79,43 @@ public class Main extends JavaPlugin implements Listener {
                 return true;
             }
 
+            World uhcWorld = Bukkit.getWorld("uhc");
+            if (uhcWorld == null) {
+                player.sendMessage(ChatColor.RED + "Le monde UHC n'existe pas !");
+                return true;
+            }
+
+            Location spawn = uhcWorld.getSpawnLocation();
+            WorldBorder border = uhcWorld.getWorldBorder();
+            border.setCenter(spawn.getX(), spawn.getZ());
+            border.setSize(getConfig().getInt("border-size", 500));
+
+            Bukkit.broadcastMessage(ChatColor.RED + "🌍 La bordure a été positionnée sur le spawn du monde UHC !");
             GameManager.setGameState(GameManager.GameState.STARTING);
             Bukkit.broadcastMessage(ChatColor.GOLD + "L'UHC démarre dans 10 secondes !");
 
-            // Récupère le délai du PvP et des rôles depuis la config
-            int pvpDelay = getConfig().getInt("pvp-timer", 10) * 60; // Convertit en secondes
-            int roleDelay = getConfig().getInt("role-announcement-delay", 10); // Par défaut : 10s
-            long roleDelayTicks = roleDelay * 20L; // Convertit en ticks (1s = 20 ticks)
-
-// Annonce du délai avant l'attribution des rôles
-            Bukkit.broadcastMessage(ChatColor.YELLOW + "🎭 Les rôles seront révélés dans " + roleDelay + " secondes !");
-
             Bukkit.getScheduler().runTaskLater(this, () -> {
-                // Attribution des rôles après le délai défini
                 new RoleManager(this).assignRoles();
                 GameManager.setGameState(GameManager.GameState.PLAYING);
-                Bukkit.broadcastMessage(ChatColor.GOLD + "🎭 Les rôles ont été attribués !");
+                Bukkit.broadcastMessage(ChatColor.GOLD + "Les rôles ont été attribués !");
+            }, 200L); // 10 secondes
 
-                // Annonce du délai d'activation du PvP
-                Bukkit.broadcastMessage(ChatColor.RED + "⚔ Le PvP sera activé dans " + (pvpDelay / 60) + " minutes !");
+            return true;
+        }
 
-                // Activation du PvP après le délai défini
-                Bukkit.getScheduler().runTaskLater(this, () -> {
-                    Bukkit.broadcastMessage(ChatColor.RED + "⚔ Le PvP est maintenant activé !");
-                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "gamerule pvp true");
-                }, pvpDelay * 20L); // Convertit en ticks (1 sec = 20 ticks)
+        if (command.getName().equalsIgnoreCase("enduhc")) {
+            if (!player.hasPermission("uhcplugin.enduhc")) {
+                player.sendMessage(ChatColor.RED + "❌ Tu n'as pas la permission de terminer la partie !");
+                return true;
+            }
 
-            }, roleDelayTicks); // Applique le délai défini pour l'annonce des rôles
+            GameManager.setGameState(GameManager.GameState.ENDED);
+            Bukkit.broadcastMessage(ChatColor.RED + "🏁 La partie a été forcée à se terminer par " + player.getName() + " !");
+
+            // ⏳ Ajoute un délai avant de reset le monde (ex: 10 secondes)
+            Bukkit.getScheduler().runTaskLater(this, () -> {
+                resetUHCWorld();
+            }, 200L); // 10 secondes
 
             return true;
         }
@@ -249,7 +265,6 @@ public class Main extends JavaPlugin implements Listener {
         }
     }
 
-
     private void handleMainMenuClick(Player player, ItemStack clickedItem) {
         if (clickedItem.getType() == Material.BLUE_CONCRETE) {
             player.performCommand("jump");
@@ -368,5 +383,88 @@ public class Main extends JavaPlugin implements Listener {
         return item;
     }
 
+    @EventHandler
+    public void onWorldSpawnChange(org.bukkit.event.world.SpawnChangeEvent event) {
+        World world = event.getWorld();
 
+        // ⚠ Vérifie qu'on est bien dans le monde UHC avant de modifier la bordure
+        if (!world.getName().equalsIgnoreCase("uhc")) return;
+
+        Location newSpawn = world.getSpawnLocation();
+        WorldBorder border = world.getWorldBorder();
+
+        border.setCenter(newSpawn.getX(), newSpawn.getZ());
+        Bukkit.broadcastMessage(ChatColor.GREEN + "🌍 La bordure du monde UHC a été recentrée sur le spawn !");
+    }
+
+    public void resetUHCWorld() {
+        Bukkit.broadcastMessage(ChatColor.RED + "🔄 Réinitialisation du monde UHC...");
+
+        File uhcWorld = new File(Bukkit.getWorldContainer(), "uhc");
+        File backupWorld = new File(Bukkit.getWorldContainer(), "uhc_backup");
+
+        if (!backupWorld.exists()) {
+            Bukkit.getLogger().severe("[UHCPlugin] ❌ Aucun backup trouvé pour 'uhc_backup' !");
+            return;
+        }
+
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "mv delete uhc");
+        deleteWorld(uhcWorld);
+
+        try {
+            copyDirectory(backupWorld, uhcWorld);
+            Bukkit.getLogger().info("[UHCPlugin] ✅ Le monde UHC a été restauré avec succès !");
+        } catch (IOException e) {
+            Bukkit.getLogger().severe("[UHCPlugin] ❌ Erreur lors de la restauration du monde UHC !");
+            e.printStackTrace();
+        }
+
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "mv import uhc normal");
+        Bukkit.broadcastMessage(ChatColor.GREEN + "🌍 Le monde UHC a été restauré !");
+    }
+
+    // Méthode pour supprimer un dossier (utilisée pour supprimer le monde UHC avant de le restaurer)
+    private void deleteWorld(File path) {
+        if (path.exists()) {
+            File[] files = path.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    if (file.isDirectory()) {
+                        deleteWorld(file);
+                    } else {
+                        file.delete();
+                    }
+                }
+            }
+        }
+        path.delete();
+    }
+
+    // Méthode pour copier un dossier (utilisée pour restaurer le backup)
+    private void copyDirectory(File source, File target) throws IOException {
+        if (source.isDirectory()) {
+            if (!target.exists()) {
+                target.mkdirs();
+            }
+            String[] files = source.list();
+            if (files != null) {
+                for (String file : files) {
+                    copyDirectory(new File(source, file), new File(target, file));
+                }
+            }
+        } else {
+            try (InputStream in = new FileInputStream(source);
+                 OutputStream out = new FileOutputStream(target)) {
+                byte[] buffer = new byte[1024];
+                int length;
+                while ((length = in.read(buffer)) > 0) {
+                    out.write(buffer, 0, length);
+                }
+            }
+        }
+    }
+
+    public static Main getInstance() {
+        return instance;
+    }
 }
