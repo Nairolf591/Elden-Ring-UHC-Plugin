@@ -26,6 +26,8 @@ public class Main extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
+    RoleManager roleManager = new RoleManager(this);
+    new Margit(this, roleManager);
         instance = this; // Stocke l'instance du plugin
         Bukkit.getLogger().info("[UHCPlugin] Le plugin est activé !");
         saveDefaultConfig();
