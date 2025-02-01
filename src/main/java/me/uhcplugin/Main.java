@@ -33,7 +33,7 @@ public class Main extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(new RoleMenu(this), this);
         scoreboardManager = new ScoreboardManager(this);
         if (GameManager.getGameState() == GameManager.GameState.STARTING) {
-            Bukkit.getLogger().info("Le jeu est en mode STARTING !");
+            Bukkit.getLogger().info("Le jeu est en mode STARTING test !");
         }
     }
 
