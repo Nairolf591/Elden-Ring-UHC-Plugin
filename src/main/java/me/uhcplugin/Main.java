@@ -1,5 +1,7 @@
 package me.uhcplugin;
 
+import me.uhcplugin.role.Margit;
+
 import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
