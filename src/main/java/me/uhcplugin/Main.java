@@ -237,6 +237,33 @@ public class Main extends JavaPlugin implements Listener {
                     openMainMenu(player);
                     break;
 
+                case BARRIER: // 📏 Modifier la taille de la bordure
+                    if (!player.hasPermission("uhcplugin.config")) {
+                        player.sendMessage(ChatColor.RED + "❌ Tu n'as pas la permission de modifier la configuration !");
+                        return;
+                    }
+
+                    int currentSize = getConfig().getInt("border-size", 500); // Taille actuelle
+                    int minSize = 100, maxSize = 2000; // 🛑 Bornes de la bordure
+
+                    if (event.isLeftClick() && currentSize < maxSize) {
+                        currentSize += 100; // ⬆️ Augmente de 100 blocs
+                    } else if (event.isRightClick() && currentSize > minSize) {
+                        currentSize -= 100; // ⬇️ Diminue de 100 blocs
+                    }
+
+                    getConfig().set("border-size", currentSize);
+                    saveConfig();
+
+                    // ✅ Applique la nouvelle taille de la bordure
+                    Bukkit.getWorld("uhc").getWorldBorder().setSize(currentSize);
+
+                    player.sendMessage(ChatColor.GREEN + "🌍 Taille de la bordure mise à jour : " + currentSize + " blocs.");
+
+                    // ✅ Met à jour l'affichage du menu
+                    openConfigMenu(player);
+                    break;
+
                 case DIAMOND_SWORD: // ⚔️ Modifier le timer du PvP
                     if (!player.hasPermission("uhcplugin.config")) {
                         player.sendMessage(ChatColor.RED + "❌ Tu n'as pas la permission de modifier la configuration !");
@@ -405,21 +432,19 @@ public class Main extends JavaPlugin implements Listener {
     public void openConfigMenu(Player player) {
         Inventory configMenu = Bukkit.createInventory(null, 9, ChatColor.YELLOW + "Configuration UHC");
 
-        // Récupère les valeurs actuelles pour l'affichage
         int currentPvpTime = getConfig().getInt("pvp-timer", 10);
         int currentRoleTime = getConfig().getInt("role-announcement-delay", 10);
+        int currentBorderSize = getConfig().getInt("border-size", 500); // Taille de la bordure actuelle
 
-        // Création des items avec les valeurs dynamiques
-        ItemStack borderSize = createItem(Material.BARRIER, ChatColor.RED + "Taille de la Bordure");
-        ItemStack pvpTimer = createItem(Material.DIAMOND_SWORD, ChatColor.RED + "Temps avant PvP: " + ChatColor.GOLD + currentPvpTime + " min");
-        ItemStack roleTimer = createItem(Material.PAPER, ChatColor.LIGHT_PURPLE + "Temps avant annonce des rôles: " + ChatColor.GOLD + currentRoleTime + " sec");
+        ItemStack borderSize = createItem(Material.BARRIER, ChatColor.RED + "📏 Bordure : " + ChatColor.GOLD + currentBorderSize + " blocs");
+        ItemStack pvpTimer = createItem(Material.DIAMOND_SWORD, ChatColor.RED + "⚔️ Temps avant PvP: " + ChatColor.GOLD + currentPvpTime + " min");
+        ItemStack roleTimer = createItem(Material.PAPER, ChatColor.LIGHT_PURPLE + "🎭 Temps avant rôles: " + ChatColor.GOLD + currentRoleTime + " sec");
         ItemStack roleManager = createItem(Material.BOOK, ChatColor.GOLD + "📜 Gérer les Rôles");
         ItemStack backButton = createItem(Material.ARROW, ChatColor.GRAY + "Retour");
 
-        // Placement des items dans l'inventaire
         configMenu.setItem(0, borderSize);
         configMenu.setItem(1, pvpTimer);
-        configMenu.setItem(2, roleTimer); // ✅ Ajout ici
+        configMenu.setItem(2, roleTimer);
         configMenu.setItem(4, roleManager);
         configMenu.setItem(8, backButton);
 
