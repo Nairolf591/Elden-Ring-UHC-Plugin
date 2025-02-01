@@ -11,7 +11,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -45,20 +45,20 @@ public class Margit implements Listener {
             ItemMeta meta = hammer.getItemMeta();
             if (meta != null) {
                 meta.setDisplayName(ChatColor.GOLD + "Marteau de Margit");
-                meta.addEnchant(Enchantment.DURABILITY, 1, false); // Enchantement visuel
-                meta.addItemFlags(ItemFlag.HIDE_ENCHANTS); // Cache l'effet si besoin
+                meta.addEnchant(Enchantment.DURABILITY, 1, false);
+                meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
                 hammer.setItemMeta(meta);
             }
             player.getInventory().addItem(hammer);
-            player.sendMessage(ChatColor.GOLD + "Vous avez reçu le Marteau de Margit ! Utilisez-le avec un clic gauche.");
+            player.sendMessage(ChatColor.GOLD + "Vous avez reçu le Marteau de Margit ! Utilisez-le en sneak.");
         }, 200L);
     }
 
     @EventHandler
-    public void onPlayerInteract(PlayerInteractEvent event) {
+    public void onPlayerSneak(PlayerToggleSneakEvent event) {
         if (!event.getPlayer().equals(player)) return;
-        if (event.getItem() == null || event.getItem().getType() != HAMMER_ITEM) return;
-        if (!event.getAction().toString().contains("LEFT_CLICK")) return; // Détection du clic gauche
+        if (!player.isSneaking()) return; // Vérifie qu'il commence à sneak
+        if (player.getInventory().getItemInMainHand().getType() != HAMMER_ITEM) return; // Vérifie l'item en main
 
         long currentTime = System.currentTimeMillis();
         long lastUsed = cooldowns.getOrDefault(player.getUniqueId(), 0L);
