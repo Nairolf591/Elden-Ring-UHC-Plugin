@@ -2,18 +2,21 @@ package me.uhcplugin.role;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.Sound;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Listener;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.event.player.PlayerInteractEvent.Action;
 import org.bukkit.util.Vector;
 
 import java.util.HashMap;
@@ -21,55 +24,127 @@ import java.util.Map;
 import java.util.UUID;
 
 public class Margit implements Listener {
+    private final Player player;
+    private final Map<UUID, Long> cooldowns = new HashMap<>();
+    private static final long COOLDOWN_TIME = 180 * 1000;
+    private static final Material HAMMER_ITEM = Material.GOLDEN_AXE;
 
-    private static final Map<UUID, Long> cooldowns = new HashMap<>();
-    private static final long COOLDOWN_TIME = 5000L; // 5 seconds cooldown in milliseconds
-
-    // Event listener to detect right-click with the hammer in hand
-    @EventHandler
-    public void onPlayerInteract(PlayerInteractEvent event) {
-        Player player = event.getPlayer();
-        ItemStack item = player.getInventory().getItemInMainHand();
-
-        // Check if the player right-clicks with the hammer (in this case a GOLDEN_AXE)
-        if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-            if (item.getType() == Material.GOLDEN_AXE && item.hasItemMeta()) {
-                activateSkill(player);
-            }
-        }
+    public Margit(Player player) {
+        this.player = player;
+        applyConstantEffects();
+        giveHammerItem();
     }
 
-    // Method to activate the skill when the hammer is clicked
-    public static void activateSkill(Player player) {
-        if (cooldowns.containsKey(player.getUniqueId()) && 
-            System.currentTimeMillis() - cooldowns.get(player.getUniqueId()) < COOLDOWN_TIME) {
-            player.sendMessage(ChatColor.RED + "You must wait before using the skill again!");
+    private void applyConstantEffects() {
+        player.addPotionEffect(new PotionEffect(
+            PotionEffectType.INCREASE_DAMAGE, 
+            Integer.MAX_VALUE, 
+            0, 
+            false, 
+            false
+        ));
+    }
+
+    private void giveHammerItem() {
+        Bukkit.getScheduler().runTaskLater(Bukkit.getPluginManager().getPlugin("UHCPlugin"), () -> {
+            ItemStack hammer = new ItemStack(HAMMER_ITEM);
+            ItemMeta meta = hammer.getItemMeta();
+            
+            if (meta != null) {
+                meta.setDisplayName(ChatColor.GOLD + "Marteau de Margit");
+                meta.addEnchant(Enchantment.LUCK, 1, true); // Enchantement visible
+                meta.addItemFlags(org.bukkit.inventory.ItemFlag.HIDE_ENCHANTS);
+                hammer.setItemMeta(meta);
+            }
+            
+            player.getInventory().addItem(hammer);
+            player.sendMessage(ChatColor.GOLD + "§lMARTEAU DISPONIBLE ! Clic droit pour sauter !");
+        }, 200L);
+    }
+
+    // Détection simplifiée pour Bedrock/Java
+    @EventHandler
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        if (!event.getPlayer().equals(player)) return;
+        
+        ItemStack item = event.getItem();
+        if (item == null || 
+            item.getType() != HAMMER_ITEM || 
+            !item.hasItemMeta() || 
+            !item.getItemMeta().getDisplayName().equals(ChatColor.GOLD + "Marteau de Margit")) {
             return;
         }
 
-        // Get the direction the player is facing
-        Vector direction = player.getLocation().getDirection().normalize().multiply(10); // 10 blocks forward
+        // Détection clic droit uniquement (même sur Bedrock)
+        if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            handleSkillActivation();
+            event.setCancelled(true); // Empêche l'interaction avec les blocs
+        }
+    }
 
-        // Calculate new location 10 blocks ahead in the direction the player is facing
-        player.setVelocity(new Vector(0, 1, 0)); // Propel the player upwards slightly for the jump
-        player.teleport(player.getLocation().add(direction)); // Teleport the player 10 blocks ahead
+    private void handleSkillActivation() {
+        long currentTime = System.currentTimeMillis();
+        long lastUsed = cooldowns.getOrDefault(player.getUniqueId(), 0L);
 
-        // Apply the damage to nearby entities
-        for (Entity entity : player.getNearbyEntities(5, 5, 5)) { // 5 block radius
-            if (entity instanceof LivingEntity && entity != player) {
-                LivingEntity livingEntity = (LivingEntity) entity;
-                livingEntity.damage(6); // Deal 3 hearts of damage (6 damage points)
-            }
+        if (currentTime - lastUsed < COOLDOWN_TIME) {
+            long remaining = (COOLDOWN_TIME - (currentTime - lastUsed)) / 1000;
+            player.sendMessage(ChatColor.RED + "§lRecharge: " + remaining + "s");
+            return;
         }
 
-        // Play sound and particle effects to signal skill activation
-        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
-        player.getWorld().spawnParticle(org.bukkit.Particle.EXPLOSION_LARGE, player.getLocation(), 1);
+        cooldowns.put(player.getUniqueId(), currentTime);
+        performHammerJump();
+    }
 
-        // Set cooldown for the player
-        cooldowns.put(player.getUniqueId(), System.currentTimeMillis());
+    private void performHammerJump() {
+        // Boost vertical + horizontal
+        Vector boost = player.getLocation().getDirection()
+            .multiply(2.0)
+            .setY(1.2);
+        
+        player.setVelocity(boost);
+        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_FLAP, 1.0f, 0.5f);
+        
+        // Effets visuels pendant le saut
+        Bukkit.getScheduler().runTaskLater(Bukkit.getPluginManager().getPlugin("UHCPlugin"), () -> {
+            player.getWorld().spawnParticle(
+                Particle.FLAME, 
+                player.getLocation(), 
+                30, 
+                0.5, 
+                0.5, 
+                0.5, 
+                0.1
+            );
+        }, 5L);
 
-        // Message to the player
-        player.sendMessage(ChatColor.GREEN + "Hammer skill activated! You jumped forward and dealt damage!");
+        // Retombée après 1 seconde
+        Bukkit.getScheduler().runTaskLater(Bukkit.getPluginManager().getPlugin("UHCPlugin"), this::hammerImpact, 20);
+    }
+
+    private void hammerImpact() {
+        Location impactPoint = player.getLocation();
+        
+        // Effets sonores/visuels
+        player.getWorld().playSound(impactPoint, Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1.0f, 0.7f);
+        player.getWorld().spawnParticle(Particle.EXPLOSION_HUGE, impactPoint, 1);
+
+        // Dégâts zone + knockback
+        for (Entity entity : player.getWorld().getNearbyEntities(impactPoint, 5, 3, 5)) {
+            if (entity.equals(player)) continue;
+            
+            Vector knockback = entity.getLocation()
+                .toVector()
+                .subtract(impactPoint.toVector())
+                .normalize()
+                .multiply(1.8)
+                .setY(0.6);
+            
+            entity.setVelocity(knockback);
+            
+            if (entity instanceof Player) {
+                ((Player) entity).damage(6.0);
+            }
+        }
     }
 }
