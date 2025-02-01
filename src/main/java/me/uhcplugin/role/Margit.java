@@ -2,11 +2,9 @@ package me.uhcplugin.role;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -25,104 +23,88 @@ import java.util.UUID;
 
 public class Margit implements Listener {
     private final Player player;
-    private final Map<UUID, Long> cooldowns = new HashMap<>();
-    private static final long COOLDOWN_TIME = 180 * 1000; // 3 minutes en ms
-    private static final Material HAMMER_ITEM = Material.GOLDEN_AXE; // Marteau = hache en or
+    private final Map<UUID, Long> cooldowns = new HashMap<>(); // Stocke les cooldowns par joueur
+    private static final long COOLDOWN_TIME = 180 * 1000; // 3 minutes en millisecondes
+    private static final Material HAMMER_ITEM = Material.GOLDEN_AXE; // Hache en or pour activer la compétence
 
     public Margit(Player player) {
         this.player = player;
-        applyConstantEffects();
-        giveHammerItem();
+        applyConstantEffects(); // Applique l'effet de force constant
+        giveHammerItem(); // Donne l'item spécial après 10 secondes
     }
 
-    // Applique Force 1 en permanence
+    // Applique l'effet de force de 10% (amplitude 1 = 20%, donc 0.5 pour 10%)
     private void applyConstantEffects() {
         player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, Integer.MAX_VALUE, 0, false, false));
     }
 
-    // Donne l'item après 10 secondes avec un enchantement pour le rendre visible
+    // Donne l'item spécial après 10 secondes
     private void giveHammerItem() {
         Bukkit.getScheduler().runTaskLater(player.getServer().getPluginManager().getPlugin("UHCPlugin"), () -> {
             ItemStack hammer = new ItemStack(HAMMER_ITEM);
             ItemMeta meta = hammer.getItemMeta();
             if (meta != null) {
                 meta.setDisplayName(ChatColor.GOLD + "Marteau de Margit");
-                meta.addEnchant(Enchantment.KNOCKBACK, 1, true); // Enchantement pour le rendre brillant
                 hammer.setItemMeta(meta);
             }
             player.getInventory().addItem(hammer);
-            player.sendMessage(ChatColor.GOLD + "Vous avez reçu le Marteau de Margit !");
+            player.sendMessage(ChatColor.GOLD + "Vous avez reçu le Marteau de Margit ! Utilisez-le pour sauter.");
         }, 200L); // 10 secondes = 200 ticks
     }
 
-    // Détection du CLIC GAUCHE et CLIC DROIT avec le marteau
+    // Gère l'activation de la compétence lorsque le joueur s'accroupit avec l'item spécial en main
     @EventHandler
-    public void onPlayerInteract(PlayerInteractEvent event) {
-        Player p = event.getPlayer();
-        if (!p.equals(player)) return;
+    public void onPlayerToggleSneak(PlayerToggleSneakEvent event) {
+        Player player = event.getPlayer();
 
-        if (event.getItem() == null || event.getItem().getType() != HAMMER_ITEM) return;
+        // Vérifie si le joueur est accroupi et tient la hache en or
+        if (event.isSneaking() && player.getInventory().getItemInMainHand().getType() == HAMMER_ITEM) {
+            // Vérifie le cooldown
+            long currentTime = System.currentTimeMillis();
+            long lastUsed = cooldowns.getOrDefault(player.getUniqueId(), 0L);
 
-        if (event.getAction().toString().contains("LEFT_CLICK") || event.getAction().toString().contains("RIGHT_CLICK")) {
-            p.sendMessage(ChatColor.YELLOW + "Détection du clic !");
-            activateSkill(p);
+            if (currentTime - lastUsed < COOLDOWN_TIME) {
+                long remainingTime = (COOLDOWN_TIME - (currentTime - lastUsed)) / 1000;
+                player.sendMessage(ChatColor.RED + "Vous devez attendre " + remainingTime + " secondes avant de réutiliser cette compétence.");
+                return;
+            }
+
+            // Active la compétence
+            performHammerJump();
+            cooldowns.put(player.getUniqueId(), currentTime); // Met à jour le cooldown
         }
     }
 
-    // Détection du SNEAK avec le marteau
-    @EventHandler
-    public void onPlayerSneak(PlayerToggleSneakEvent event) {
-        Player p = event.getPlayer();
-        if (!p.equals(player)) return;
-
-        if (!p.isSneaking()) return; // Vérifie qu'il s'accroupit
-
-        if (p.getInventory().getItemInMainHand().getType() != HAMMER_ITEM) return;
-
-        p.sendMessage(ChatColor.YELLOW + "Détection du sneak !");
-        activateSkill(p);
-    }
-
-    // Vérifie le cooldown et active la compétence
-    private void activateSkill(Player p) {
-        long currentTime = System.currentTimeMillis();
-        long lastUsed = cooldowns.getOrDefault(p.getUniqueId(), 0L);
-
-        if (currentTime - lastUsed < COOLDOWN_TIME) {
-            long remainingTime = (COOLDOWN_TIME - (currentTime - lastUsed)) / 1000;
-            p.sendMessage(ChatColor.RED + "Cooldown actif : " + remainingTime + " secondes restantes.");
-            return;
-        }
-
-        p.sendMessage(ChatColor.GREEN + "Compétence activée !");
-        performHammerJump();
-        cooldowns.put(p.getUniqueId(), currentTime);
-    }
-
-    // Effectue le saut du marteau
+    // Effectue le saut avec le marteau
     private void performHammerJump() {
+        // Vecteur de direction pour le saut
         Vector direction = player.getLocation().getDirection().multiply(2).setY(1.5);
         player.setVelocity(direction);
 
+        // Sons et particules pendant le saut
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_RAVAGER_ROAR, 1.0f, 1.0f);
         player.getWorld().spawnParticle(Particle.CLOUD, player.getLocation(), 30, 0.5, 0.5, 0.5, 0.1);
 
-        // Effet de retombée après 1 seconde
+        // Planifie l'effet de retombée après 1 seconde (20 ticks)
         Bukkit.getScheduler().runTaskLater(player.getServer().getPluginManager().getPlugin("UHCPlugin"), this::hammerLanding, 20);
     }
 
-    // Effet d'impact du marteau
+    // Effet de retombée du saut
     private void hammerLanding() {
         Location location = player.getLocation();
 
+        // Sons et particules à la retombée
         player.getWorld().playSound(location, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
         player.getWorld().spawnParticle(Particle.EXPLOSION_LARGE, location, 10, 2, 0.5, 2, 0.1);
 
+        // Inflige des dégâts à toutes les entités proches
         for (Entity entity : player.getWorld().getNearbyEntities(location, 5, 3, 5)) {
             if (!entity.equals(player)) {
                 entity.setVelocity(entity.getLocation().toVector().subtract(location.toVector()).normalize().multiply(1.5));
                 if (entity instanceof Player) {
-                    ((Player) entity).damage(6.0); // 3 cœurs de dégâts
+                    ((Player) entity).damage(6.0); // 3 cœurs de dégâts aux joueurs
+                } else {
+                    entity.setVelocity(entity.getLocation().toVector().subtract(location.toVector()).normalize().multiply(1.5));
                 }
             }
         }
