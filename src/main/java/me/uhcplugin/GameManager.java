@@ -24,6 +24,9 @@ public class GameManager {
         currentState = state;
         Bukkit.broadcastMessage(ChatColor.RED + "📢 L'état du jeu est maintenant : " + state);
 
+        // 🔄 Mise à jour du scoreboard pour tous les joueurs
+        Main.getInstance().getScoreboardManager().updateAllScoreboards();
+
         if (state == GameState.ENDED) {
             Bukkit.broadcastMessage(ChatColor.RED + "🏁 La partie est terminée !");
 
