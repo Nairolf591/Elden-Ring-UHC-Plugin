@@ -16,6 +16,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import java.io.*;
+import java.util.Random;
+
 import static org.bukkit.Material.ARROW;
 import static org.bukkit.Material.BOOK;
 
@@ -66,6 +68,24 @@ public class Main extends JavaPlugin implements Listener {
         Bukkit.getLogger().info("[UHCPlugin] Le plugin est désactivé !");
     }
 
+    public Location getRandomSpawnLocation(World world, Location center, double borderSize) {
+        Random random = new Random();
+        Location spawnLocation;
+
+        do {
+            // Génère des coordonnées aléatoires dans le rayon de la bordure
+            double x = center.getX() + (random.nextDouble() * borderSize * 2 - borderSize);
+            double z = center.getZ() + (random.nextDouble() * borderSize * 2 - borderSize);
+            double y = world.getHighestBlockYAt((int) x, (int) z); // Trouve le sol
+
+            spawnLocation = new Location(world, x, y + 1, z); // +1 pour éviter d'être dans le sol
+
+        } while (spawnLocation.getBlock().getType() == Material.WATER || spawnLocation.getBlock().getType() == Material.LAVA);
+        // ⚠️ Vérifie qu'on ne spawn pas dans l'eau ou la lave
+
+        return spawnLocation;
+    }
+
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
@@ -95,26 +115,39 @@ public class Main extends JavaPlugin implements Listener {
                 return true;
             }
 
+            // 🔥 Récupère le monde UHC
             World uhcWorld = Bukkit.getWorld("uhc");
             if (uhcWorld == null) {
                 player.sendMessage(ChatColor.RED + "Le monde UHC n'existe pas !");
                 return true;
             }
 
-            Location spawn = uhcWorld.getSpawnLocation();
-            WorldBorder border = uhcWorld.getWorldBorder();
-            border.setCenter(spawn.getX(), spawn.getZ());
-            border.setSize(getConfig().getInt("border-size", 500));
+            Location center = uhcWorld.getWorldBorder().getCenter();
+            double borderSize = uhcWorld.getWorldBorder().getSize() / 2; // Rayon de la bordure
 
-            Bukkit.broadcastMessage(ChatColor.RED + "🌍 La bordure a été positionnée sur le spawn du monde UHC !");
+            // ✅ Centre la bordure sur le spawn actuel
+            uhcWorld.getWorldBorder().setCenter(center.getX(), center.getZ());
+            uhcWorld.getWorldBorder().setSize(getConfig().getInt("border-size", 500));
+
+            Bukkit.broadcastMessage(ChatColor.RED + "🌍 La bordure a été positionnée et la partie commence !");
+
+            // 🏁 Changer l'état de la partie en STARTING
             GameManager.setGameState(GameManager.GameState.STARTING);
             Bukkit.broadcastMessage(ChatColor.GOLD + "L'UHC démarre dans 10 secondes !");
 
+            // 🚀 Téléporte chaque joueur aléatoirement dans la bordure
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                Location randomSpawn = getRandomSpawnLocation(uhcWorld, center, borderSize);
+                p.teleport(randomSpawn);
+                p.sendMessage(ChatColor.GREEN + "📌 Tu as été téléporté à un emplacement aléatoire !");
+            }
+
+            // ⏳ Début du timer pour l'assignation des rôles et le passage à PLAYING
             Bukkit.getScheduler().runTaskLater(this, () -> {
                 new RoleManager(this).assignRoles();
                 GameManager.setGameState(GameManager.GameState.PLAYING);
                 Bukkit.broadcastMessage(ChatColor.GOLD + "Les rôles ont été attribués !");
-            }, 200L); // 10 secondes
+            }, 200L); // 200 ticks = 10 secondes
 
             return true;
         }
