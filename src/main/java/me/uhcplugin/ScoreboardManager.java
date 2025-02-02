@@ -81,10 +81,6 @@ public class ScoreboardManager {
             setPlayerScoreboard(onlinePlayer);
         }
     }
-  public void updateAllScoreboards() {
-    for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-        setPlayerScoreboard(onlinePlayer);
-    }
- }
+  
 
 }
