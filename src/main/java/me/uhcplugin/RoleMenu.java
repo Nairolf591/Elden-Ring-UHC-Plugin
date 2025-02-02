@@ -17,6 +17,8 @@ import java.util.Set;
 
 public class RoleMenu implements Listener {
 
+   Main.getInstance().openConfigMenu(player);
+
     private final Main plugin;
     private final FileConfiguration config;
 
