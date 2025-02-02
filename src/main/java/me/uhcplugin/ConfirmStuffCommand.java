@@ -20,13 +20,26 @@ public class ConfirmStuffCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "Seuls les joueurs peuvent utiliser cette commande.");
+            sender.sendMessage(ChatColor.RED + "❌ Seuls les joueurs peuvent utiliser cette commande.");
             return true;
         }
 
         Player player = (Player) sender;
+
+        // 📌 Sauvegarde le stuff actuel
         savePlayerStuff(player);
-        player.sendMessage(ChatColor.GREEN + "✅ Stuff sauvegardé avec succès !");
+
+        // 📌 Restaure l'inventaire précédent
+        ItemStack[] savedInventory = plugin.getOriginalInventory(player.getUniqueId());
+        ItemStack[] savedArmor = plugin.getOriginalArmor(player.getUniqueId());
+
+        if (savedInventory != null && savedArmor != null) {
+            player.getInventory().setContents(savedInventory);
+            player.getInventory().setArmorContents(savedArmor);
+            plugin.clearSavedInventory(player.getUniqueId());
+        }
+
+        player.sendMessage(ChatColor.GREEN + "✅ Stuff sauvegardé avec succès et inventaire restauré !");
         return true;
     }
 
@@ -34,11 +47,14 @@ public class ConfirmStuffCommand implements CommandExecutor {
         FileConfiguration config = plugin.getConfig();
         Inventory inv = player.getInventory();
 
-        // Sauvegarder chaque slot de l'inventaire
-        for (int i = 0; i < 36; i++) { // 36 slots = 9 rangées de 4
+        // ✅ Sauvegarde chaque slot de l’inventaire (évite les items nulls)
+        for (int i = 0; i < 36; i++) {
             ItemStack item = inv.getItem(i);
-            config.set("stuff." + i, item);
+            if (item != null) {
+                config.set("stuff." + i, item);
+            }
         }
+
         plugin.saveConfig();
     }
 }

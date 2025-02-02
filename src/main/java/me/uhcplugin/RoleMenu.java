@@ -68,4 +68,48 @@ public class RoleMenu implements Listener {
             }
         }
     }
+
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent event) {
+        if (!(event.getWhoClicked() instanceof Player)) return;
+
+        Player player = (Player) event.getWhoClicked();
+        ItemStack clickedItem = event.getCurrentItem();
+        String inventoryTitle = event.getView().getTitle();
+
+        // Vérifie si le clic est dans le menu des rôles
+        if (inventoryTitle.equals(ChatColor.GOLD + "Activation des rôles")) {
+            event.setCancelled(true); // Empêche de déplacer les objets
+
+            if (clickedItem == null || !clickedItem.hasItemMeta()) return;
+
+            // Gestion du bouton "Retour"
+            if (clickedItem.getType() == Material.ARROW) {
+                Main.getInstance().openConfigMenu(player);
+                return;
+            }
+
+            // Gestion des rôles
+            String roleName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
+
+            if (!Main.getInstance().getConfig().contains("roles." + roleName)) {
+                player.sendMessage(ChatColor.RED + "❌ Ce rôle n'existe pas dans la config !");
+                return;
+            }
+
+            boolean isEnabled = Main.getInstance().getConfig().getBoolean("roles." + roleName);
+            boolean newState = !isEnabled;
+
+            // 🔄 Mise à jour du rôle dans la config
+            Main.getInstance().getConfig().set("roles." + roleName, newState);
+            Main.getInstance().saveConfig();
+
+            // 🟢 Mise à jour du menu
+            openRoleMenu(player);
+            player.sendMessage(ChatColor.GREEN + "Le rôle " + roleName + " est maintenant " + (newState ? "activé" : "désactivé") + " !");
+
+            // ✅ Mise à jour du scoreboard
+            Main.getInstance().getScoreboardManager().updateAllScoreboards();
+        }
+    }
 }

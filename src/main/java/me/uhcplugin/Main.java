@@ -27,6 +27,7 @@ import java.util.ArrayList; // Pour la liste dans l'aperçu du stuff
 import java.util.List; // Pour la liste dans l'aperçu du stuff
 import java.util.Map; // Pour les maps
 import java.util.HashMap; // Pour les maps
+import org.bukkit.inventory.InventoryView; // Pour event.getView()
 
 public class Main extends JavaPlugin implements Listener {
 
@@ -238,8 +239,10 @@ public class Main extends JavaPlugin implements Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
-        // Récupère l'objet cliqué
-        ItemStack clickedItem = event.getCurrentItem();
+        ItemStack clickedItem = event.getCurrentItem(); // ✅ Déclaré une seule fois ici
+
+        // 🔍 Debug : Voir si l'événement est bien capté
+        Bukkit.getLogger().info("DEBUG - onInventoryClick détecté");
 
         // Vérifie que l'objet n'est pas null et a bien un ItemMeta
         if (clickedItem == null || !clickedItem.hasItemMeta()) return;
@@ -247,124 +250,104 @@ public class Main extends JavaPlugin implements Listener {
         Player player = (Player) event.getWhoClicked();
         String inventoryTitle = event.getView().getTitle();
 
+        // 🔍 Debug : Voir quel menu est détecté
+        Bukkit.getLogger().info("DEBUG - Menu détecté : " + inventoryTitle);
+
+        // 🛑 Bloque le déplacement des items pour tous les menus
+        if (inventoryTitle.contains("Configuration") || inventoryTitle.contains("Stuff") || inventoryTitle.contains("UHC")) {
+            event.setCancelled(true);
+        }
+
+        // 📌 Gestion du menu "Configuration UHC"
+        if (inventoryTitle.equals(ChatColor.YELLOW + "Configuration UHC")) {
+            event.setCancelled(true);
+            Bukkit.getLogger().info("DEBUG - Clic dans Configuration UHC");
+            handleConfigMenuClick(player, clickedItem, event);
+            return;
+        }
+
+        // 📌 Gestion du menu "Configuration du Stuff"
+        if (inventoryTitle.equals(ChatColor.GOLD + "Configuration du Stuff")) {
+            event.setCancelled(true);
+            Bukkit.getLogger().info("DEBUG - Clic dans Configuration du Stuff");
+            handleStuffConfigMenuClick(player, clickedItem);
+            return;
+        }
+
+        // 📌 Gestion du menu "Aperçu du Stuff"
+        if (inventoryTitle.equals(ChatColor.GOLD + "Aperçu du Stuff")) {
+            event.setCancelled(true);
+            if (clickedItem.getType() == Material.ARROW) {
+                Bukkit.getLogger().info("DEBUG - Retour Aperçu du Stuff");
+                openStuffConfigMenu(player);
+            }
+            return;
+        }
+
+        // 📌 Gestion du menu "Menu UHC"
         if (inventoryTitle.equals(ChatColor.GOLD + "Menu UHC")) {
             event.setCancelled(true);
+            Bukkit.getLogger().info("DEBUG - Clic dans Menu UHC");
             handleMainMenuClick(player, clickedItem);
+            return;
+        }
 
-        } else if (inventoryTitle.equals(ChatColor.YELLOW + "Configuration UHC")) {
-            event.setCancelled(true);
-            handleConfigMenuClick(player, clickedItem);
+        // ✅ Ajout des boutons spécifiques au menu Configuration
+        switch (clickedItem.getType()) {
+            case ARROW:
+                Bukkit.getLogger().info("DEBUG - Bouton Retour cliqué");
+                openMainMenu(player);
+                break;
 
-            switch (clickedItem.getType()) {
-                case ARROW: // Retour au menu principal
-                    openMainMenu(player);
-                    break;
+            case BARRIER:
+                Bukkit.getLogger().info("DEBUG - Bouton Bordure cliqué");
+                if (!player.hasPermission("uhcplugin.config")) {
+                    player.sendMessage(ChatColor.RED + "❌ Tu n'as pas la permission de modifier la configuration !");
+                    return;
+                }
+                int currentSize = getConfig().getInt("border-size", 500);
+                if (event.isLeftClick() && currentSize < 2000) currentSize += 100;
+                else if (event.isRightClick() && currentSize > 100) currentSize -= 100;
 
-                case BARRIER: // 📏 Modifier la taille de la bordure
-                    if (!player.hasPermission("uhcplugin.config")) {
-                        player.sendMessage(ChatColor.RED + "❌ Tu n'as pas la permission de modifier la configuration !");
-                        return;
-                    }
+                getConfig().set("border-size", currentSize);
+                saveConfig();
+                Bukkit.getWorld("uhc").getWorldBorder().setSize(currentSize);
+                player.sendMessage(ChatColor.GREEN + "🌍 Taille de la bordure mise à jour : " + currentSize + " blocs.");
+                openConfigMenu(player);
+                break;
 
-                    int currentSize = getConfig().getInt("border-size", 500); // Taille actuelle
-                    int minSize = 100, maxSize = 2000; // 🛑 Bornes de la bordure
+            case DIAMOND_SWORD:
+                Bukkit.getLogger().info("DEBUG - Bouton PvP Timer cliqué");
+                if (!player.hasPermission("uhcplugin.config")) return;
+                int currentPvpTime = getConfig().getInt("pvp-timer", 10);
+                if (event.isLeftClick()) currentPvpTime += 1;
+                else if (event.isRightClick() && currentPvpTime > 1) currentPvpTime -= 1;
+                getConfig().set("pvp-timer", currentPvpTime);
+                saveConfig();
+                player.sendMessage(ChatColor.GREEN + "⏳ Temps avant PvP mis à jour : " + currentPvpTime + " minutes !");
+                openConfigMenu(player);
+                break;
 
-                    if (event.isLeftClick() && currentSize < maxSize) {
-                        currentSize += 100; // ⬆️ Augmente de 100 blocs
-                    } else if (event.isRightClick() && currentSize > minSize) {
-                        currentSize -= 100; // ⬇️ Diminue de 100 blocs
-                    }
+            case PAPER:
+                Bukkit.getLogger().info("DEBUG - Bouton Temps rôles cliqué");
+                if (!player.hasPermission("uhcplugin.config")) return;
+                int currentRoleTime = getConfig().getInt("role-announcement-delay", 10);
+                if (event.isLeftClick()) currentRoleTime += 5;
+                else if (event.isRightClick() && currentRoleTime > 5) currentRoleTime -= 5;
+                getConfig().set("role-announcement-delay", currentRoleTime);
+                saveConfig();
+                player.sendMessage(ChatColor.LIGHT_PURPLE + "🎭 Temps avant annonce des rôles mis à jour : " + currentRoleTime + " secondes !");
+                openConfigMenu(player);
+                break;
 
-                    getConfig().set("border-size", currentSize);
-                    saveConfig();
-
-                    // ✅ Applique la nouvelle taille de la bordure
-                    Bukkit.getWorld("uhc").getWorldBorder().setSize(currentSize);
-
-                    player.sendMessage(ChatColor.GREEN + "🌍 Taille de la bordure mise à jour : " + currentSize + " blocs.");
-
-                    // ✅ Met à jour l'affichage du menu
-                    openConfigMenu(player);
-                    break;
-
-                case DIAMOND_SWORD: // ⚔️ Modifier le timer du PvP
-                    if (!player.hasPermission("uhcplugin.config")) {
-                        player.sendMessage(ChatColor.RED + "❌ Tu n'as pas la permission de modifier la configuration !");
-                        return;
-                    }
-
-                    int currentPvpTime = getConfig().getInt("pvp-timer", 10); // Par défaut 10 min
-                    if (event.isLeftClick()) {
-                        currentPvpTime += 1; // ⬆️ Augmente de 1 min
-                    } else if (event.isRightClick() && currentPvpTime > 1) {
-                        currentPvpTime -= 1; // ⬇️ Diminue de 1 min (min 1)
-                    }
-
-                    getConfig().set("pvp-timer", currentPvpTime);
-                    saveConfig();
-                    player.sendMessage(ChatColor.GREEN + "⏳ Temps avant PvP mis à jour : " + currentPvpTime + " minutes !");
-
-                    // ✅ Met à jour l'affichage dans le menu
-                    openConfigMenu(player);
-                    break;
-
-                case PAPER: // 📜 Modifier le délai d'annonce des rôles
-                    if (!player.hasPermission("uhcplugin.config")) {
-                        player.sendMessage(ChatColor.RED + "❌ Tu n'as pas la permission de modifier la configuration !");
-                        return;
-                    }
-
-                    int currentRoleTime = getConfig().getInt("role-announcement-delay", 10); // Par défaut 10 sec
-                    if (event.isLeftClick()) {
-                        currentRoleTime += 5; // ⬆️ Augmente de 5 sec
-                    } else if (event.isRightClick() && currentRoleTime > 5) {
-                        currentRoleTime -= 5; // ⬇️ Diminue de 5 sec (min 5)
-                    }
-
-                    getConfig().set("role-announcement-delay", currentRoleTime);
-                    saveConfig();
-                    player.sendMessage(ChatColor.LIGHT_PURPLE + "🎭 Temps avant annonce des rôles mis à jour : " + currentRoleTime + " secondes !");
-
-                    // ✅ Met à jour l'affichage dans le menu
-                    openConfigMenu(player);
-                    break;
-            }
-
-            // Vérifie si le joueur clique sur le livre "Gérer les Rôles"
-            if (clickedItem.getType() == Material.BOOK) {
+            case BOOK:
+                Bukkit.getLogger().info("DEBUG - Bouton Gérer les Rôles cliqué");
                 if (player.hasPermission("uhcplugin.config")) {
-                    new RoleMenu(this).openRoleMenu(player); // Ouvre le menu des rôles
+                    new RoleMenu(this).openRoleMenu(player);
                 } else {
                     player.sendMessage(ChatColor.RED + "❌ Tu n'as pas la permission d'accéder à la gestion des rôles !");
                 }
-            }
-
-        } else if (inventoryTitle.equals(ChatColor.GOLD + "Activation des rôles")) {
-            event.setCancelled(true); // Empêche de déplacer les items
-
-            // Gestion du retour
-            if (clickedItem.getType() == Material.ARROW) {
-                openConfigMenu(player); // Retour à la config UHC
-            } else {
-                // Active/Désactive les rôles
-                String roleName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
-                boolean newState = !getConfig().getBoolean("roles." + roleName);
-                getConfig().set("roles." + roleName, newState);
-                saveConfig();
-
-                // Met à jour l'affichage
-                ItemStack newItem = new ItemStack(newState ? Material.LIME_DYE : Material.RED_DYE);
-                ItemMeta meta = newItem.getItemMeta();
-                if (meta != null) {
-                    meta.setDisplayName((newState ? ChatColor.GREEN : ChatColor.RED) + roleName);
-                    newItem.setItemMeta(meta);
-                }
-                event.getInventory().setItem(event.getSlot(), newItem);
-                player.sendMessage(ChatColor.GREEN + "Le rôle " + roleName + " est maintenant " + (newState ? "activé" : "désactivé") + " !");
-
-                // ✅ Mise à jour du scoreboard pour tous les joueurs
-                scoreboardManager.updateAllScoreboards();
-            }
+                break;
         }
     }
 
@@ -378,35 +361,77 @@ public class Main extends JavaPlugin implements Listener {
         }
     }
 
-    private void handleConfigMenuClick(Player player, ItemStack clickedItem) {
+    private void handleConfigMenuClick(Player player, ItemStack clickedItem, InventoryClickEvent event) {
         if (!player.hasPermission("uhcplugin.config")) {
-            player.sendMessage(ChatColor.RED + "Tu n'as pas la permission de modifier la configuration !");
+            player.sendMessage(ChatColor.RED + "❌ Tu n'as pas la permission de modifier la configuration !");
+            return;
+        }
+
+        if (clickedItem == null || !clickedItem.hasItemMeta()) {
+            Bukkit.getLogger().info("DEBUG - Objet cliqué null ou sans meta");
             return;
         }
 
         String itemName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
+        Bukkit.getLogger().info("DEBUG - Item cliqué : " + itemName);
 
-        if (itemName.equals("Taille de la Bordure")) {
-            int currentSize = getConfig().getInt("border-size", 100);
-            int newSize = (currentSize == 100) ? 50 : 100; // Alterne entre 100 et 50 blocs
-            getConfig().set("border-size", newSize);
+        // 📏 Modifier la taille de la bordure
+        if (itemName.contains("Bordure")) {
+            int currentSize = getConfig().getInt("border-size", 500);
+            int minSize = 100, maxSize = 2000;
+
+            if (player.isSneaking()) {
+                currentSize += 500; // ⬆️ Augmente de 500 blocs en sneaking
+            } else if (event.isLeftClick()) {
+                currentSize += 100; // ⬆️ Augmente de 100 blocs
+            } else if (event.isRightClick() && currentSize > minSize) {
+                currentSize -= 100; // ⬇️ Diminue de 100 blocs
+            }
+
+            currentSize = Math.max(minSize, Math.min(maxSize, currentSize));
+
+            getConfig().set("border-size", currentSize);
             saveConfig();
+            Bukkit.getWorld("uhc").getWorldBorder().setSize(currentSize);
 
-            // Applique la nouvelle taille de la bordure
-            Bukkit.getWorld("world").getWorldBorder().setSize(newSize);
+            player.sendMessage(ChatColor.GREEN + "🌍 Taille de la bordure mise à jour : " + currentSize + " blocs !");
+            openConfigMenu(player);
 
-            player.sendMessage(ChatColor.GREEN + "Taille de la bordure mise à jour : " + newSize);
-        }
-        else if (itemName.equals("Temps avant PvP")) {
+            // ⚔️ Modifier le timer du PvP
+        } else if (itemName.contains("PvP")) {
             int currentTime = getConfig().getInt("pvp-timer", 10);
-            int newTime = (currentTime == 10) ? 5 : 10;
-            getConfig().set("pvp-timer", newTime);
+            if (event.isLeftClick()) {
+                currentTime += 1;
+            } else if (event.isRightClick() && currentTime > 1) {
+                currentTime -= 1;
+            }
+
+            getConfig().set("pvp-timer", currentTime);
             saveConfig();
+            player.sendMessage(ChatColor.GREEN + "⏳ Temps avant PvP mis à jour : " + currentTime + " minutes !");
+            openConfigMenu(player);
 
-            // 🔹 Met à jour le scoreboard après modification des rôles ou du PvP
-            scoreboardManager.updateScoreboard(player);
+            // 📜 Modifier le délai d’annonce des rôles
+        } else if (itemName.contains("rôles")) {
+            int currentRoleTime = getConfig().getInt("role-announcement-delay", 10);
+            if (event.isLeftClick()) {
+                currentRoleTime += 5;
+            } else if (event.isRightClick() && currentRoleTime > 5) {
+                currentRoleTime -= 5;
+            }
 
-            player.sendMessage(ChatColor.GREEN + "Temps avant PvP mis à jour : " + newTime + " minutes !");
+            getConfig().set("role-announcement-delay", currentRoleTime);
+            saveConfig();
+            player.sendMessage(ChatColor.LIGHT_PURPLE + "🎭 Temps avant annonce des rôles mis à jour : " + currentRoleTime + " sec !");
+            openConfigMenu(player);
+
+            // 🎒 Ouvrir la gestion du stuff
+        } else if (itemName.contains("Stuff")) {
+            openStuffConfigMenu(player);
+
+            // 📜 Ouvrir la gestion des rôles
+        } else if (itemName.contains("Rôles")) {
+            new RoleMenu(this).openRoleMenu(player);
         }
     }
 
@@ -470,11 +495,13 @@ public class Main extends JavaPlugin implements Listener {
         ItemStack pvpTimer = createItem(Material.DIAMOND_SWORD, ChatColor.RED + "⚔️ Temps avant PvP: " + ChatColor.GOLD + currentPvpTime + " min");
         ItemStack roleTimer = createItem(Material.PAPER, ChatColor.LIGHT_PURPLE + "🎭 Temps avant rôles: " + ChatColor.GOLD + currentRoleTime + " sec");
         ItemStack roleManager = createItem(Material.BOOK, ChatColor.GOLD + "📜 Gérer les Rôles");
+        ItemStack stuffManager = createItem(Material.CHEST, ChatColor.GOLD + "🎒 Configurer le Stuff"); // Nouvel item pour configurer le stuff
         ItemStack backButton = createItem(Material.ARROW, ChatColor.GRAY + "Retour");
 
         configMenu.setItem(0, borderSize);
         configMenu.setItem(1, pvpTimer);
         configMenu.setItem(2, roleTimer);
+        configMenu.setItem(3, stuffManager);
         configMenu.setItem(4, roleManager);
         configMenu.setItem(8, backButton);
 
@@ -589,5 +616,79 @@ public class Main extends JavaPlugin implements Listener {
 
     public ScoreboardManager getScoreboardManager() {
         return scoreboardManager;
+    }
+
+    public void openStuffConfigMenu(Player player) {
+        Inventory stuffMenu = Bukkit.createInventory(null, 27, ChatColor.GOLD + "Configuration du Stuff");
+
+        // Bouton "Choisir le stuff"
+        ItemStack chooseStuff = createItem(Material.CHEST, ChatColor.GREEN + "Choisir le Stuff");
+        stuffMenu.setItem(11, chooseStuff);
+
+        // Bouton "Aperçu du stuff"
+        ItemStack previewStuff = createItem(Material.CHEST_MINECART, ChatColor.YELLOW + "Aperçu du Stuff");
+        stuffMenu.setItem(13, previewStuff); // Position centrale
+
+        // Bouton "Retour"
+        ItemStack backButton = createItem(Material.ARROW, ChatColor.GRAY + "Retour");
+        stuffMenu.setItem(15, backButton);
+
+        player.openInventory(stuffMenu);
+    }
+
+    private void handleStuffConfigMenuClick(Player player, ItemStack clickedItem) {
+        // 📌 Choisir le stuff
+        if (clickedItem.getType() == Material.CHEST) {
+            // ✅ Sauvegarde temporaire de l’inventaire du joueur
+            originalInventories.put(player.getUniqueId(), player.getInventory().getContents());
+            originalArmor.put(player.getUniqueId(), player.getInventory().getArmorContents());
+
+            // ✅ Vide l’inventaire pour laisser le joueur choisir
+            player.getInventory().clear();
+            player.sendMessage(ChatColor.GREEN + "🎒 Configurez votre stuff, puis utilisez /confirmstuff pour sauvegarder !");
+        }
+
+        // 📌 Aperçu du stuff
+        else if (clickedItem.getType() == Material.CHEST_MINECART) {
+            openStuffPreview(player);
+        }
+
+        // 📌 Retour au menu de config
+        else if (clickedItem.getType() == Material.ARROW) {
+            openConfigMenu(player);
+        }
+    }
+
+
+    // Méthodes pour gérer l'inventaire original
+    public ItemStack[] getOriginalInventory(UUID playerId) {
+        return originalInventories.get(playerId);
+    }
+
+    public ItemStack[] getOriginalArmor(UUID playerId) {
+        return originalArmor.get(playerId);
+    }
+
+    public void clearSavedInventory(UUID playerId) {
+        originalInventories.remove(playerId);
+        originalArmor.remove(playerId);
+    }
+
+    public void openStuffPreview(Player player) {
+        Inventory previewInventory = Bukkit.createInventory(null, 54, ChatColor.GOLD + "Aperçu du Stuff");
+
+        // Récupère le stuff sauvegardé depuis la config
+        FileConfiguration config = getConfig();
+        for (int i = 0; i < 36; i++) { // 36 slots pour l'inventaire normal
+            if (config.contains("stuff." + i)) {
+                ItemStack item = config.getItemStack("stuff." + i);
+                previewInventory.setItem(i, item);
+            }
+        }
+
+        // Bouton "Retour"
+        ItemStack backButton = createItem(Material.ARROW, ChatColor.GRAY + "Retour");
+        previewInventory.setItem(53, backButton); // En bas à droite
+        player.openInventory(previewInventory);
     }
 }

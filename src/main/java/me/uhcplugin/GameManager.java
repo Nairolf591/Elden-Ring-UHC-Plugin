@@ -45,14 +45,16 @@ public class GameManager {
     }
 
     private static void givePlayerStuff(Player player) {
-    FileConfiguration config = Main.getInstance().getConfig();
-    for (int i = 0; i < 36; i++) { // Parcours complet de l'inventaire
-        if (config.contains("stuff." + i)) {
-            ItemStack item = config.getItemStack("stuff." + i);
-            player.getInventory().setItem(i, item);
-        }
+        Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
+            FileConfiguration config = Main.getInstance().getConfig();
+            for (int i = 0; i < 36; i++) { // Parcours complet de l'inventaire
+                if (config.contains("stuff." + i)) {
+                    ItemStack item = config.getItemStack("stuff." + i);
+                    player.getInventory().setItem(i, item);
+                }
+            }
+        }, 100L); // 100 ticks = 5 secondes (1 tick = 1/20e de seconde)
     }
-}
 
     // Vérifie si la partie est en attente
     public static boolean isWaiting() {
