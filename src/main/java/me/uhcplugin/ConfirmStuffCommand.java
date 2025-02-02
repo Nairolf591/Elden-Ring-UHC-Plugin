@@ -19,16 +19,30 @@ public class ConfirmStuffCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        if (!(sender instanceof Player)) {
-            sender.sendMessage(ChatColor.RED + "Seuls les joueurs peuvent utiliser cette commande.");
-            return true;
-        }
-
-        Player player = (Player) sender;
-        savePlayerStuff(player);
-        player.sendMessage(ChatColor.GREEN + "✅ Stuff sauvegardé avec succès !");
+    if (!(sender instanceof Player)) {
+        sender.sendMessage(ChatColor.RED + "Seuls les joueurs peuvent utiliser cette commande.");
         return true;
     }
+
+    Player player = (Player) sender;
+
+    // Sauvegarde le stuff actuel
+    savePlayerStuff(player);
+
+    // Restaure l'inventaire précédent
+    Main main = (Main) plugin;
+    ItemStack[] savedInventory = main.getOriginalInventory(player.getUniqueId());
+    ItemStack[] savedArmor = main.getOriginalArmor(player.getUniqueId());
+
+    if (savedInventory != null && savedArmor != null) {
+        player.getInventory().setContents(savedInventory);
+        player.getInventory().setArmorContents(savedArmor);
+        main.clearSavedInventory(player.getUniqueId());
+    }
+
+    player.sendMessage(ChatColor.GREEN + "✅ Stuff sauvegardé avec succès et inventaire restauré !");
+    return true;
+}
 
     public void savePlayerStuff(Player player) {
         FileConfiguration config = plugin.getConfig();
