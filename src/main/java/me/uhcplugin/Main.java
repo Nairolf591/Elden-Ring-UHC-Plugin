@@ -509,7 +509,7 @@ this.getCommand("confirmstuff").setExecutor(new ConfirmStuffCommand(this));
     stuffMenu.setItem(15, createItem(Material.ARROW, ChatColor.GRAY + "Retour"));
 
     player.openInventory(stuffMenu);
-}
+ }
     
     private void handleStuffConfigMenuClick(Player player, ItemStack clickedItem) {
     if (clickedItem.getType() == Material.CHEST) {
