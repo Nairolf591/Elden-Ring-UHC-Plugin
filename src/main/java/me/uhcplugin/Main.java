@@ -519,6 +519,10 @@ this.getCommand("confirmstuff").setExecutor(new ConfirmStuffCommand(this));
         player.getInventory().clear();
         player.sendMessage(ChatColor.GREEN + "Configurez votre stuff, puis utilisez /confirmstuff pour sauvegarder !");
 
+    } else if (clickedItem.getType() == Material.CHEST_MINECART) {
+        // Ouvre l'aperçu du stuff
+        openStuffPreview(player);
+
     } else if (clickedItem.getType() == Material.ARROW) {
         openConfigMenu(player);
     }
