@@ -521,29 +521,16 @@ this.getCommand("confirmstuff").setExecutor(new ConfirmStuffCommand(this));
         // Sauvegarde l'inventaire actuel
         originalInventories.put(player.getUniqueId(), player.getInventory().getContents());
         originalArmor.put(player.getUniqueId(), player.getInventory().getArmorContents());
-        
+
+        // Clear l'inventaire pour configurer le stuff
         player.getInventory().clear();
-        player.sendMessage(ChatColor.GREEN + "Configurez votre stuff puis cliquez sur la laine verte !");
-        
-        ItemStack confirmButton = createItem(Material.LIME_WOOL, ChatColor.GREEN + "Confirmer le Stuff");
-        player.getInventory().setItem(8, confirmButton);
-        
+        player.sendMessage(ChatColor.GREEN + "Configurez votre stuff, puis utilisez /confirmstuff pour sauvegarder !");
+
     } else if (clickedItem.getType() == Material.ARROW) {
         openConfigMenu(player);
-    } else if (clickedItem.getType() == Material.LIME_WOOL) {
-        // Exécute la commande confirmstuff
-        new ConfirmStuffCommand(this).savePlayerStuff(player);
-        
-        // Restaure l'inventaire précédent
-        player.getInventory().setContents(originalInventories.get(player.getUniqueId()));
-        player.getInventory().setArmorContents(originalArmor.get(player.getUniqueId()));
-        originalInventories.remove(player.getUniqueId());
-        originalArmor.remove(player.getUniqueId());
-        
-        player.closeInventory();
-        player.sendMessage(ChatColor.GREEN + "Stuff sauvegardé avec succès !");
     }
-  }
+ }
+
 // Méthodes pour gérer l'inventaire original
   public ItemStack[] getOriginalInventory(UUID playerId) {
     return originalInventories.get(playerId);
