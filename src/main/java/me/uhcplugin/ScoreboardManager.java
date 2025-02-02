@@ -58,12 +58,12 @@ public class ScoreboardManager {
         // 📌 Rôles activés
         List<String> activeRoles = getActiveRoles();
         if (!activeRoles.isEmpty()) {
-            objective.getScore(ChatColor.GOLD + "🎭 Rôles activés :").setScore(2);
+            objective.getScore(ChatColor.GOLD + "🎭 Rôles activés :").setScore(1);
 
-            int score = 1;
+            int score = 0;
             for (String role : activeRoles) {
-                objective.getScore(ChatColor.WHITE + "» " + role).setScore(score);
-                score--;
+                objective.getScore(ChatColor.WHITE + "• " + role).setScore(-score);
+                score++;
             }
         }
     }
@@ -82,4 +82,41 @@ public class ScoreboardManager {
         }
     }
 
+    public void updateRoleTimer(int secondsLeft) {
+        if (objective == null) return;
+
+        // 🔄 Supprime uniquement l'ancien timer pour éviter l'empilement
+        scoreboard.resetScores(getLastTimerValue());
+
+        // 📌 Réaffichage des infos principales pour éviter qu'elles disparaissent
+        objective.getScore(ChatColor.AQUA + "👥 Joueurs : " + ChatColor.WHITE + Bukkit.getOnlinePlayers().size()).setScore(5);
+        objective.getScore(ChatColor.RED + "⚔ État : " + ChatColor.WHITE + GameManager.getGameState()).setScore(4);
+        objective.getScore(ChatColor.LIGHT_PURPLE + "👑 Host : " + ChatColor.WHITE + "Flobill").setScore(3);
+
+        // 📌 Attribution des rôles
+        objective.getScore(ChatColor.LIGHT_PURPLE + "🎭 Attribution des rôles dans :").setScore(2);
+
+        // ✅ Stocke et affiche le timer
+        lastTimerValue = ChatColor.WHITE.toString() + secondsLeft + "s";
+        objective.getScore(lastTimerValue).setScore(1);
+
+        // 📌 Rôles activés (réaffichage propre)
+        List<String> activeRoles = getActiveRoles();
+        if (!activeRoles.isEmpty()) {
+            objective.getScore(ChatColor.GOLD + "🎭 Rôles activés :").setScore(0);
+            int roleScore = -1;
+            for (String role : activeRoles) {
+                objective.getScore(ChatColor.WHITE + "• " + role).setScore(roleScore);
+                roleScore--;
+            }
+        }
+    }
+
+    // 🔄 Variable pour stocker l'ancien timer et pouvoir le supprimer
+    private String lastTimerValue = "0s";
+
+    // 📌 Fonction pour récupérer la dernière valeur stockée
+    private String getLastTimerValue() {
+        return lastTimerValue;
+    }
 }

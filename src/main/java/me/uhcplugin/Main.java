@@ -17,19 +17,29 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import java.io.*;
 import java.util.Random;
-
 import static org.bukkit.Material.ARROW;
 import static org.bukkit.Material.BOOK;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.configuration.file.FileConfiguration;
+import java.util.UUID; // Pour utiliser UUID dans les maps
+import java.util.ArrayList; // Pour la liste dans l'aperçu du stuff
+import java.util.List; // Pour la liste dans l'aperçu du stuff
+import java.util.Map; // Pour les maps
+import java.util.HashMap; // Pour les maps
 
 public class Main extends JavaPlugin implements Listener {
 
     private static Main instance;
     private ScoreboardManager scoreboardManager;
+    private final Map<UUID, ItemStack[]> originalInventories = new HashMap<>();
+    private final Map<UUID, ItemStack[]> originalArmor = new HashMap<>();
 
     @Override
     public void onEnable() {
         instance = this;
         Bukkit.getLogger().info("[UHCPlugin] Le plugin est en cours d'activation...");
+        this.getCommand("confirmstuff").setExecutor(new ConfirmStuffCommand(this));
 
         try {
             saveDefaultConfig();
@@ -153,6 +163,9 @@ public class Main extends JavaPlugin implements Listener {
             int ticks = roleDelay * 20; // Convertit en ticks (1s = 20 ticks)
 
             Bukkit.broadcastMessage(ChatColor.GOLD + "📢 Attribution des rôles dans " + roleDelay + " secondes...");
+            new CountdownTimer(this, roleDelay, (secondsLeft) -> {
+                scoreboardManager.updateRoleTimer(secondsLeft);
+            }).start();
 
             Bukkit.getScheduler().runTaskLater(this, () -> {
                 new RoleManager(this).assignRoles();
