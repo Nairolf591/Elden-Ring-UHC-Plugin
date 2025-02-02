@@ -502,16 +502,30 @@ this.getCommand("confirmstuff").setExecutor(new ConfirmStuffCommand(this));
     
     private void handleStuffConfigMenuClick(Player player, ItemStack clickedItem) {
     if (clickedItem.getType() == Material.CHEST) {
-        // Le joueur a cliqué sur "Choisir le stuff"
-        player.getInventory().clear(); // On vide l'inventaire du joueur
-        player.sendMessage(ChatColor.GREEN + "Configurez votre stuff dans votre inventaire, puis cliquez sur le bloc de laine verte pour confirmer.");
-
-        // Ajouter le bouton de confirmation
+        // Sauvegarde l'inventaire actuel
+        originalInventories.put(player.getUniqueId(), player.getInventory().getContents());
+        originalArmor.put(player.getUniqueId(), player.getInventory().getArmorContents());
+        
+        player.getInventory().clear();
+        player.sendMessage(ChatColor.GREEN + "Configurez votre stuff puis cliquez sur la laine verte !");
+        
         ItemStack confirmButton = createItem(Material.LIME_WOOL, ChatColor.GREEN + "Confirmer le Stuff");
-        player.getInventory().setItem(8, confirmButton); // Place le bouton dans le slot 8 (en bas à droite)
+        player.getInventory().setItem(8, confirmButton);
+        
     } else if (clickedItem.getType() == Material.ARROW) {
-        // Le joueur a cliqué sur "Retour"
-        openConfigMenu(player); 
+        openConfigMenu(player);
+    } else if (clickedItem.getType() == Material.LIME_WOOL) {
+        // Exécute la commande confirmstuff
+        new ConfirmStuffCommand(this).savePlayerStuff(player);
+        
+        // Restaure l'inventaire précédent
+        player.getInventory().setContents(originalInventories.get(player.getUniqueId()));
+        player.getInventory().setArmorContents(originalArmor.get(player.getUniqueId()));
+        originalInventories.remove(player.getUniqueId());
+        originalArmor.remove(player.getUniqueId());
+        
+        player.closeInventory();
+        player.sendMessage(ChatColor.GREEN + "Stuff sauvegardé avec succès !");
     }
   }
 
