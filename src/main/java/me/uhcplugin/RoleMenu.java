@@ -84,7 +84,7 @@ public class RoleMenu implements Listener {
 
         // Gestion du bouton "Retour"
         if (clickedItem.getType() == Material.ARROW) {
-                     Main.getInstance().openConfigMenu(player);
+            openConfigMenu(player);
             return;
         }
 
@@ -99,6 +99,9 @@ public class RoleMenu implements Listener {
         // Met à jour le menu
         openRoleMenu(player);
         player.sendMessage(ChatColor.GREEN + "Rôle " + roleName + " " + (isEnabled ? "désactivé" : "activé") + " !");
+
+        // 🔄 Met à jour le scoreboard pour tous les joueurs
+        plugin.getScoreboardManager().updateAllScoreboards();
     }
  }
 }
