@@ -84,7 +84,8 @@ public class RoleMenu implements Listener {
 
         // Gestion du bouton "Retour"
         if (clickedItem.getType() == Material.ARROW) {
-            openConfigMenu(player);
+                Main.getInstance().openConfigMenu(player);  // Correct si Main a une instance statique
+
             return;
         }
 
