@@ -22,6 +22,7 @@ import java.util.ArrayList; // Pour la liste dans l'aperçu du stuff
 import java.util.List; // Pour la liste dans l'aperçu du stuff
 import java.util.Map; // Pour les maps
 import java.util.HashMap; // Pour les maps
+import org.bukkit.inventory.InventoryView; // Pour event.getView()
 import static org.bukkit.Material.ARROW;
 import static org.bukkit.Material.BOOK;
 
@@ -272,6 +273,16 @@ this.getCommand("confirmstuff").setExecutor(new ConfirmStuffCommand(this));
                 player.sendMessage(ChatColor.RED + "❌ Tu n'as pas la permission d'accéder à la gestion des rôles !");
             }
         }
+
+  // Gestion de l'aperçu du stuff
+    if (event.getView().getTitle().equals(ChatColor.GOLD + "Aperçu du Stuff")) {
+        event.setCancelled(true); // Empêche de prendre les items
+
+        if (event.getCurrentItem() != null && event.getCurrentItem().getType() == Material.ARROW) {
+            // Bouton "Retour"
+            openStuffConfigMenu((Player) event.getWhoClicked());
+        }
+     }
     }
 
     private void handleMainMenuClick(Player player, ItemStack clickedItem) {
