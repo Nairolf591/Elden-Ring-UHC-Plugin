@@ -30,7 +30,7 @@ public class ConfirmStuffCommand implements CommandExecutor {
         return true;
     }
 
-    private void savePlayerStuff(Player player) {
+    public void savePlayerStuff(Player player) {
         FileConfiguration config = plugin.getConfig();
         Inventory inv = player.getInventory();
 
