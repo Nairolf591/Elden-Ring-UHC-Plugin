@@ -16,8 +16,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import java.io.*;
-import java.util.Random;
-
 import static org.bukkit.Material.ARROW;
 import static org.bukkit.Material.BOOK;
 
@@ -48,6 +46,7 @@ public class Main extends JavaPlugin implements Listener {
 
             getServer().getPluginManager().registerEvents(this, this);
             getServer().getPluginManager().registerEvents(new RoleMenu(this), this);
+            
 
             // ✅ Vérification pour éviter d'appeler updateAllScoreboards() sur null
             if (scoreboardManager != null) {
@@ -66,24 +65,6 @@ public class Main extends JavaPlugin implements Listener {
     @Override
     public void onDisable() {
         Bukkit.getLogger().info("[UHCPlugin] Le plugin est désactivé !");
-    }
-
-    public Location getRandomSpawnLocation(World world, Location center, double borderSize) {
-        Random random = new Random();
-        Location spawnLocation;
-
-        do {
-            // Génère des coordonnées aléatoires dans le rayon de la bordure
-            double x = center.getX() + (random.nextDouble() * borderSize * 2 - borderSize);
-            double z = center.getZ() + (random.nextDouble() * borderSize * 2 - borderSize);
-            double y = world.getHighestBlockYAt((int) x, (int) z); // Trouve le sol
-
-            spawnLocation = new Location(world, x, y + 1, z); // +1 pour éviter d'être dans le sol
-
-        } while (spawnLocation.getBlock().getType() == Material.WATER || spawnLocation.getBlock().getType() == Material.LAVA);
-        // ⚠️ Vérifie qu'on ne spawn pas dans l'eau ou la lave
-
-        return spawnLocation;
     }
 
     @Override
@@ -115,39 +96,26 @@ public class Main extends JavaPlugin implements Listener {
                 return true;
             }
 
-            // 🔥 Récupère le monde UHC
             World uhcWorld = Bukkit.getWorld("uhc");
             if (uhcWorld == null) {
                 player.sendMessage(ChatColor.RED + "Le monde UHC n'existe pas !");
                 return true;
             }
 
-            Location center = uhcWorld.getWorldBorder().getCenter();
-            double borderSize = uhcWorld.getWorldBorder().getSize() / 2; // Rayon de la bordure
+            Location spawn = uhcWorld.getSpawnLocation();
+            WorldBorder border = uhcWorld.getWorldBorder();
+            border.setCenter(spawn.getX(), spawn.getZ());
+            border.setSize(getConfig().getInt("border-size", 500));
 
-            // ✅ Centre la bordure sur le spawn actuel
-            uhcWorld.getWorldBorder().setCenter(center.getX(), center.getZ());
-            uhcWorld.getWorldBorder().setSize(getConfig().getInt("border-size", 500));
-
-            Bukkit.broadcastMessage(ChatColor.RED + "🌍 La bordure a été positionnée et la partie commence !");
-
-            // 🏁 Changer l'état de la partie en STARTING
+            Bukkit.broadcastMessage(ChatColor.RED + "🌍 La bordure a été positionnée sur le spawn du monde UHC !");
             GameManager.setGameState(GameManager.GameState.STARTING);
             Bukkit.broadcastMessage(ChatColor.GOLD + "L'UHC démarre dans 10 secondes !");
 
-            // 🚀 Téléporte chaque joueur aléatoirement dans la bordure
-            for (Player p : Bukkit.getOnlinePlayers()) {
-                Location randomSpawn = getRandomSpawnLocation(uhcWorld, center, borderSize);
-                p.teleport(randomSpawn);
-                p.sendMessage(ChatColor.GREEN + "📌 Tu as été téléporté à un emplacement aléatoire !");
-            }
-
-            // ⏳ Début du timer pour l'assignation des rôles et le passage à PLAYING
             Bukkit.getScheduler().runTaskLater(this, () -> {
                 new RoleManager(this).assignRoles();
                 GameManager.setGameState(GameManager.GameState.PLAYING);
                 Bukkit.broadcastMessage(ChatColor.GOLD + "Les rôles ont été attribués !");
-            }, 200L); // 200 ticks = 10 secondes
+            }, 200L); // 10 secondes
 
             return true;
         }
@@ -231,37 +199,18 @@ public class Main extends JavaPlugin implements Listener {
         } else if (inventoryTitle.equals(ChatColor.YELLOW + "Configuration UHC")) {
             event.setCancelled(true);
             handleConfigMenuClick(player, clickedItem);
+            
+            if (clickedItem.getType() == Material.CHEST) {
+            openStuffConfigMenu(player); // Ouvrir le menu de configuration du stuff
+        }
+    } else if (inventoryTitle.equals(ChatColor.GOLD + "Configuration du Stuff")) {
+        event.setCancelled(true);
+        handleStuffConfigMenuClick(player, clickedItem);
+    }
 
             switch (clickedItem.getType()) {
                 case ARROW: // Retour au menu principal
                     openMainMenu(player);
-                    break;
-
-                case BARRIER: // 📏 Modifier la taille de la bordure
-                    if (!player.hasPermission("uhcplugin.config")) {
-                        player.sendMessage(ChatColor.RED + "❌ Tu n'as pas la permission de modifier la configuration !");
-                        return;
-                    }
-
-                    int currentSize = getConfig().getInt("border-size", 500); // Taille actuelle
-                    int minSize = 100, maxSize = 2000; // 🛑 Bornes de la bordure
-
-                    if (event.isLeftClick() && currentSize < maxSize) {
-                        currentSize += 100; // ⬆️ Augmente de 100 blocs
-                    } else if (event.isRightClick() && currentSize > minSize) {
-                        currentSize -= 100; // ⬇️ Diminue de 100 blocs
-                    }
-
-                    getConfig().set("border-size", currentSize);
-                    saveConfig();
-
-                    // ✅ Applique la nouvelle taille de la bordure
-                    Bukkit.getWorld("uhc").getWorldBorder().setSize(currentSize);
-
-                    player.sendMessage(ChatColor.GREEN + "🌍 Taille de la bordure mise à jour : " + currentSize + " blocs.");
-
-                    // ✅ Met à jour l'affichage du menu
-                    openConfigMenu(player);
                     break;
 
                 case DIAMOND_SWORD: // ⚔️ Modifier le timer du PvP
@@ -430,25 +379,27 @@ public class Main extends JavaPlugin implements Listener {
     }
 
     public void openConfigMenu(Player player) {
-        Inventory configMenu = Bukkit.createInventory(null, 9, ChatColor.YELLOW + "Configuration UHC");
-
-        int currentPvpTime = getConfig().getInt("pvp-timer", 10);
-        int currentRoleTime = getConfig().getInt("role-announcement-delay", 10);
-        int currentBorderSize = getConfig().getInt("border-size", 500); // Taille de la bordure actuelle
-
-        ItemStack borderSize = createItem(Material.BARRIER, ChatColor.RED + "📏 Bordure : " + ChatColor.GOLD + currentBorderSize + " blocs");
-        ItemStack pvpTimer = createItem(Material.DIAMOND_SWORD, ChatColor.RED + "⚔️ Temps avant PvP: " + ChatColor.GOLD + currentPvpTime + " min");
-        ItemStack roleTimer = createItem(Material.PAPER, ChatColor.LIGHT_PURPLE + "🎭 Temps avant rôles: " + ChatColor.GOLD + currentRoleTime + " sec");
-        ItemStack roleManager = createItem(Material.BOOK, ChatColor.GOLD + "📜 Gérer les Rôles");
-        ItemStack backButton = createItem(Material.ARROW, ChatColor.GRAY + "Retour");
-
-        configMenu.setItem(0, borderSize);
-        configMenu.setItem(1, pvpTimer);
-        configMenu.setItem(2, roleTimer);
-        configMenu.setItem(4, roleManager);
-        configMenu.setItem(8, backButton);
-
-        player.openInventory(configMenu);
+      Inventory configMenu = Bukkit.createInventory(null, 9, ChatColor.YELLOW + "Configuration UHC");
+  
+      int currentPvpTime = getConfig().getInt("pvp-timer", 10);
+      int currentRoleTime = getConfig().getInt("role-announcement-delay", 10);
+      int currentBorderSize = getConfig().getInt("border-size", 500); // Taille de la bordure actuelle
+  
+      ItemStack borderSize = createItem(Material.BARRIER, ChatColor.RED + "📏 Bordure : " + ChatColor.GOLD + currentBorderSize + " blocs");
+      ItemStack pvpTimer = createItem(Material.DIAMOND_SWORD, ChatColor.RED + "⚔️ Temps avant PvP: " + ChatColor.GOLD + currentPvpTime + " min");
+      ItemStack roleTimer = createItem(Material.PAPER, ChatColor.LIGHT_PURPLE + "🎭 Temps avant rôles: " + ChatColor.GOLD + currentRoleTime + " sec");
+      ItemStack roleManager = createItem(Material.BOOK, ChatColor.GOLD + "📜 Gérer les Rôles");
+      ItemStack stuffManager = createItem(Material.CHEST, ChatColor.GOLD + "🎒 Configurer le Stuff"); // Nouvel item pour configurer le stuff
+      ItemStack backButton = createItem(Material.ARROW, ChatColor.GRAY + "Retour");
+  
+      configMenu.setItem(0, borderSize);
+      configMenu.setItem(1, pvpTimer);
+      configMenu.setItem(2, roleTimer);
+      configMenu.setItem(3, stuffManager); // Ajout du nouvel item
+      configMenu.setItem(4, roleManager);
+      configMenu.setItem(8, backButton);
+  
+      player.openInventory(configMenu);
     }
 
     private ItemStack createItem(Material material, String name) {
@@ -560,4 +511,33 @@ public class Main extends JavaPlugin implements Listener {
     public ScoreboardManager getScoreboardManager() {
         return scoreboardManager;
     }
+    
+    public void openStuffConfigMenu(Player player) {
+    Inventory stuffMenu = Bukkit.createInventory(null, 27, ChatColor.GOLD + "Configuration du Stuff");
+
+    // Bouton "Choisir le stuff"
+    ItemStack chooseStuff = createItem(Material.CHEST, ChatColor.GREEN + "Choisir le Stuff");
+    stuffMenu.setItem(11, chooseStuff);
+
+    // Bouton "Retour"
+    ItemStack backButton = createItem(Material.ARROW, ChatColor.GRAY + "Retour");
+    stuffMenu.setItem(15, backButton);
+
+    player.openInventory(stuffMenu);
+    }
+    
+    private void handleStuffConfigMenuClick(Player player, ItemStack clickedItem) {
+    if (clickedItem.getType() == Material.CHEST) {
+        // Le joueur a cliqué sur "Choisir le stuff"
+        player.getInventory().clear(); // On vide l'inventaire du joueur
+        player.sendMessage(ChatColor.GREEN + "Configurez votre stuff dans votre inventaire, puis cliquez sur le bloc de laine verte pour confirmer.");
+
+        // Ajouter le bouton de confirmation
+        ItemStack confirmButton = createItem(Material.LIME_WOOL, ChatColor.GREEN + "Confirmer le Stuff");
+        player.getInventory().setItem(8, confirmButton); // Place le bouton dans le slot 8 (en bas à droite)
+    } else if (clickedItem.getType() == Material.ARROW) {
+        // Le joueur a cliqué sur "Retour"
+        openConfigMenu(player); 
+    }
+  }
 }
