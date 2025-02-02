@@ -494,27 +494,16 @@ this.getCommand("confirmstuff").setExecutor(new ConfirmStuffCommand(this));
     public void openStuffConfigMenu(Player player) {
     Inventory stuffMenu = Bukkit.createInventory(null, 27, ChatColor.GOLD + "Configuration du Stuff");
 
-    // Item de preview
-    ItemStack previewItem = createItem(Material.CHEST_MINECART, ChatColor.YELLOW + "Stuff actuellement sauvegardé");
-    ItemMeta meta = previewItem.getItemMeta();
-    
-    // Récupère le stuff depuis la config
-    List<String> lore = new ArrayList<>();
-    for(int i = 0; i < 36; i++) {
-        ItemStack item = getConfig().getItemStack("stuff." + i);
-        if(item != null) {
-            lore.add(ChatColor.GRAY + "- " + item.getType().toString());
-        }
-    }
-    meta.setLore(lore);
-    previewItem.setItemMeta(meta);
-    
-    stuffMenu.setItem(13, previewItem); // Position centrale
-    stuffMenu.setItem(11, createItem(Material.CHEST, ChatColor.GREEN + "Modifier le Stuff"));
-    stuffMenu.setItem(15, createItem(Material.ARROW, ChatColor.GRAY + "Retour"));
+    // Bouton "Choisir le stuff"
+    ItemStack chooseStuff = createItem(Material.CHEST, ChatColor.GREEN + "Choisir le Stuff");
+    stuffMenu.setItem(11, chooseStuff);
+
+    // Bouton "Retour"
+    ItemStack backButton = createItem(Material.ARROW, ChatColor.GRAY + "Retour");
+    stuffMenu.setItem(15, backButton);
 
     player.openInventory(stuffMenu);
- }
+}
     
     private void handleStuffConfigMenuClick(Player player, ItemStack clickedItem) {
     if (clickedItem.getType() == Material.CHEST) {
