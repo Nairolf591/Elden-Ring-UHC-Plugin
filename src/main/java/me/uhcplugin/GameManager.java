@@ -45,14 +45,14 @@ public class GameManager {
     }
 
     private static void givePlayerStuff(Player player) {
-        FileConfiguration config = Main.getInstance().getConfig();
-        for (int i = 0; i < player.getInventory().getSize(); i++) {
-            if (config.contains("stuff." + i)) {
-                ItemStack item = config.getItemStack("stuff." + i);
-                player.getInventory().setItem(i, item);
-            }
+    FileConfiguration config = Main.getInstance().getConfig();
+    for (int i = 0; i < 36; i++) { // Parcours complet de l'inventaire
+        if (config.contains("stuff." + i)) {
+            ItemStack item = config.getItemStack("stuff." + i);
+            player.getInventory().setItem(i, item);
         }
     }
+}
 
     // Vérifie si la partie est en attente
     public static boolean isWaiting() {
