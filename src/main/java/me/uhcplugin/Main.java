@@ -538,4 +538,23 @@ public void clearSavedInventory(UUID playerId) {
     originalArmor.remove(playerId);
  }
 
+   public void openStuffPreview(Player player) {
+    Inventory previewInventory = Bukkit.createInventory(null, 54, ChatColor.GOLD + "Aperçu du Stuff");
+
+    // Récupère le stuff sauvegardé depuis la config
+    FileConfiguration config = getConfig();
+    for (int i = 0; i < 36; i++) { // 36 slots pour l'inventaire normal
+        if (config.contains("stuff." + i)) {
+            ItemStack item = config.getItemStack("stuff." + i);
+            previewInventory.setItem(i, item);
+        }
+    }
+
+    // Bouton "Retour"
+    ItemStack backButton = createItem(Material.ARROW, ChatColor.GRAY + "Retour");
+    previewInventory.setItem(53, backButton); // En bas à droite
+
+    player.openInventory(previewInventory);
+ }
+
 }
