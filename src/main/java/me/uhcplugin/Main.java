@@ -544,5 +544,18 @@ this.getCommand("confirmstuff").setExecutor(new ConfirmStuffCommand(this));
         player.sendMessage(ChatColor.GREEN + "Stuff sauvegardé avec succès !");
     }
   }
+// Méthodes pour gérer l'inventaire original
+  public ItemStack[] getOriginalInventory(UUID playerId) {
+    return originalInventories.get(playerId);
+ }
+
+public ItemStack[] getOriginalArmor(UUID playerId) {
+    return originalArmor.get(playerId);
+ }
+
+public void clearSavedInventory(UUID playerId) {
+    originalInventories.remove(playerId);
+    originalArmor.remove(playerId);
+ }
 
 }
