@@ -44,6 +44,10 @@ commands:
       description: "Permet de forcer la fin de la partie"
       default: op
 
+  confirmstuff:
+    description: "Confirme et sauvegarde le stuff du joueur."
+    usage: "/confirmstuff"
+
 
 
 
