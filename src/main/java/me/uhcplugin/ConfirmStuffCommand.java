@@ -42,7 +42,7 @@ public class ConfirmStuffCommand implements CommandExecutor {
 
     player.sendMessage(ChatColor.GREEN + "✅ Stuff sauvegardé avec succès et inventaire restauré !");
     return true;
-}
+ }
 
     public void savePlayerStuff(Player player) {
         FileConfiguration config = plugin.getConfig();
