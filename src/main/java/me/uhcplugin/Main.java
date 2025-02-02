@@ -24,8 +24,8 @@ public class Main extends JavaPlugin implements Listener {
 
     private static Main instance;
     private ScoreboardManager scoreboardManager;
-private final Map<UUID, ItemStack[]> originalInventories = new HashMap<>();
-private final Map<UUID, ItemStack[]> originalArmor = new HashMap<>();
+    private final Map<UUID, ItemStack[]> originalInventories = new HashMap<>();
+    private final Map<UUID, ItemStack[]> originalArmor = new HashMap<>();
 
     @Override
     public void onEnable() {
