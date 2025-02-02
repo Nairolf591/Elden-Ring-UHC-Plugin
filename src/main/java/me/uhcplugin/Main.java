@@ -511,5 +511,10 @@ public class Main extends JavaPlugin implements Listener {
         openConfigMenu(player); 
     }
   }
-
+@Override
+public void onEnable() {
+    // Enregistrer la commande
+    this.getCommand("confirmstuff").setExecutor(new ConfirmStuffCommand(this));
+    // ... autres initialisations
+}
 }
