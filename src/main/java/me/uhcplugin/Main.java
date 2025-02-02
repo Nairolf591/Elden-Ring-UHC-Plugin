@@ -498,6 +498,10 @@ this.getCommand("confirmstuff").setExecutor(new ConfirmStuffCommand(this));
     ItemStack chooseStuff = createItem(Material.CHEST, ChatColor.GREEN + "Choisir le Stuff");
     stuffMenu.setItem(11, chooseStuff);
 
+    // Bouton "Aperçu du stuff"
+    ItemStack previewStuff = createItem(Material.CHEST_MINECART, ChatColor.YELLOW + "Aperçu du Stuff");
+    stuffMenu.setItem(13, previewStuff); // Position centrale
+
     // Bouton "Retour"
     ItemStack backButton = createItem(Material.ARROW, ChatColor.GRAY + "Retour");
     stuffMenu.setItem(15, backButton);
