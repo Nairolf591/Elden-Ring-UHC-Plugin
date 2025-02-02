@@ -389,7 +389,7 @@ public class Main extends JavaPlugin implements Listener {
         // ⚠ Vérifie qu'on est bien dans le monde UHC avant de modifier la bordure
         if (!world.getName().equalsIgnoreCase("uhc")) return;
 
-        Location newSpawn = world.getS
+        Location newSpawn = world.getSpawnLocation ();
         WorldBorder border = world.getWorldBorder();
 
         border.setCenter(newSpawn.getX(), newSpawn.getZ());
