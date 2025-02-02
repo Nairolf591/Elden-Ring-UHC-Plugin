@@ -1,5 +1,6 @@
 package me.uhcplugin;
-
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -510,4 +511,31 @@ public class Main extends JavaPlugin implements Listener {
         openConfigMenu(player); 
     }
   }
+  @EventHandler
+  public void   onPlayerInteract(PlayerInteractEvent event) {
+    ItemStack item = event.getItem();       Player player = event.getPlayer();
+
+    if (item != null 
+        && item.getType() == Material.LIME_WOOL 
+        && item.getItemMeta().getDisplayName().equals(ChatColor.GREEN + "Confirmer le Stuff")) {
+        
+        // Sauvegarder le stuff du joueur
+        savePlayerStuff(player);
+        player.sendMessage(ChatColor.GREEN + "✅ Stuff sauvegardé !");
+        player.getInventory().remove(item); // Retirer le bouton de confirmation
+    }
+}
+private void savePlayerStuff(Player player) {
+    FileConfiguration config = getConfig();
+    Inventory inv = player.getInventory();
+
+    // Sauvegarde chaque slot sauf le bouton de confirmation (slot 8)
+    for (int i = 0; i < 36; i++) { // 36 slots = 9 rangées de 4
+        if (i != 8) { // Ignorer le slot de confirmation
+            ItemStack item = inv.getItem(i);
+            config.set("stuff." + i, item);
+        }
+    }
+    saveConfig();
+}
 }
