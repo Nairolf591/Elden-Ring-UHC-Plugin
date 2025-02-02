@@ -95,7 +95,13 @@ public class Main extends JavaPlugin implements Listener {
         Player player = (Player) sender;
 
         if (command.getName().equalsIgnoreCase("jump")) {
-            teleportPlayer(player, "jump-location");
+            if (GameManager.getGameState() == GameManager.GameState.PLAYING && !player.isOp()) {
+                player.sendMessage(ChatColor.RED + "❌ Tu ne peux pas utiliser cette commande en pleine partie !");
+                return true;
+            }
+
+            // Téléporte normalement si la condition est respectée
+            teleportPlayer(player, command.getName().equalsIgnoreCase("jump") ? "jump-location" : "spawn-location");
             return true;
         }
 
@@ -143,13 +149,17 @@ public class Main extends JavaPlugin implements Listener {
             }
 
             // ⏳ Début du timer pour l'assignation des rôles et le passage à PLAYING
+            int roleDelay = getConfig().getInt("role-announcement-delay", 10); // Récupère la valeur depuis config.yml (10 par défaut)
+            int ticks = roleDelay * 20; // Convertit en ticks (1s = 20 ticks)
+
+            Bukkit.broadcastMessage(ChatColor.GOLD + "📢 Attribution des rôles dans " + roleDelay + " secondes...");
+
             Bukkit.getScheduler().runTaskLater(this, () -> {
                 new RoleManager(this).assignRoles();
                 GameManager.setGameState(GameManager.GameState.PLAYING);
-                Bukkit.broadcastMessage(ChatColor.GOLD + "Les rôles ont été attribués !");
-            }, 200L); // 200 ticks = 10 secondes
+                Bukkit.broadcastMessage(ChatColor.GOLD + "🎭 Les rôles ont été attribués !");
+            }, ticks);
 
-            return true;
         }
 
         if (command.getName().equalsIgnoreCase("enduhc")) {
@@ -395,6 +405,13 @@ public class Main extends JavaPlugin implements Listener {
         if (item.getType() == Material.COMPASS && item.hasItemMeta() &&
                 item.getItemMeta().getDisplayName().equals(ChatColor.GOLD + "Menu UHC")) {
             openMainMenu(player);
+
+            // Vérifie si la partie est en cours et si le joueur n'est pas OP
+            if (GameManager.getGameState() == GameManager.GameState.PLAYING && !player.isOp()) {
+                player.sendMessage(ChatColor.RED + "❌ Tu ne peux pas ouvrir le menu en pleine partie !");
+                event.setCancelled(true);
+                return;
+            }
         }
     }
 
