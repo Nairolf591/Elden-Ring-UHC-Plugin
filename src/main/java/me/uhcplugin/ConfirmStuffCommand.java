@@ -1,10 +1,14 @@
 package me.uhcplugin;
 
+import org.bukkit.ChatColor; // Pour utiliser ChatColor
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.configuration.file.FileConfiguration; // Pour utiliser FileConfiguration
+import org.bukkit.inventory.Inventory; // Pour utiliser Inventory
+
 
 public class ConfirmStuffCommand implements CommandExecutor {
     private final Main plugin;
