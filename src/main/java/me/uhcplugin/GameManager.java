@@ -56,7 +56,6 @@ public class GameManager {
     }, 100L); // 100 ticks = 5 secondes (1 tick = 1/20e de seconde)
  }
 
-}
 
     // Vérifie si la partie est en attente
     public static boolean isWaiting() {
