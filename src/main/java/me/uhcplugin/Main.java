@@ -17,6 +17,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import java.io.*;
+import java.util.UUID; // Pour utiliser UUID dans les maps
+import java.util.ArrayList; // Pour la liste dans l'aperçu du stuff
+import java.util.List; // Pour la liste dans l'aperçu du stuff
+import java.util.Map; // Pour les maps
+import java.util.HashMap; // Pour les maps
 import static org.bukkit.Material.ARROW;
 import static org.bukkit.Material.BOOK;
 
