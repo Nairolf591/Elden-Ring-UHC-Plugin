@@ -159,6 +159,23 @@ public class Main extends JavaPlugin implements Listener {
                 p.sendMessage(ChatColor.GREEN + "📌 Tu as été téléporté à un emplacement aléatoire !");
             }
 
+            // 🛡️ Active l'invincibilité
+            int invincibilityTime = getConfig().getInt("invincibility-duration", 90);
+            Bukkit.broadcastMessage(ChatColor.AQUA + "🛡️ Invincibilité activée pour " + invincibilityTime + " secondes !");
+
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                p.setInvulnerable(true); // Rend le joueur invincible
+            }
+
+            // ⏳ Désactive l'invincibilité après X secondes
+            Bukkit.getScheduler().runTaskLater(this, () -> {
+                for (Player p : Bukkit.getOnlinePlayers()) {
+                    p.setInvulnerable(false);
+                    p.sendMessage(ChatColor.RED + "⚔️ Tu n'es plus invincible !");
+                }
+                Bukkit.broadcastMessage(ChatColor.RED + "⚔️ L'invincibilité est terminée !");
+            }, invincibilityTime * 20L); // Convertit les secondes en ticks
+
             // ⏳ Début du timer pour l'assignation des rôles et le passage à PLAYING
             int roleDelay = getConfig().getInt("role-announcement-delay", 10); // Récupère la valeur depuis config.yml (10 par défaut)
             int ticks = roleDelay * 20; // Convertit en ticks (1s = 20 ticks)
