@@ -23,7 +23,6 @@ public class UHCManager {
     // ✅ Active/Désactive le PvP
     public void setPvPEnabled(boolean enabled) {
         Bukkit.getWorlds().forEach(world -> world.setPVP(enabled));
-        Bukkit.broadcastMessage(ChatColor.RED + "⚔ PvP " + (enabled ? "activé" : "désactivé") + " !");
     }
 
     // ✅ Gère la bordure
@@ -65,4 +64,15 @@ public class UHCManager {
             }
         }.runTaskLater(plugin, duration * 20L);
     }
+
+    public void startPvPTimer(int minutes) {
+        Bukkit.broadcastMessage(ChatColor.RED + "⚔️ Le PvP s'activera dans " + minutes + " minutes !");
+
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            setPvPEnabled(true);
+            Bukkit.broadcastMessage(ChatColor.RED + "⚔️ Le PvP est maintenant activé !");
+        }, minutes * 60 * 20);
+        // Convertit minutes en ticks
+    }
+
 }

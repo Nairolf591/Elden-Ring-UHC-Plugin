@@ -176,9 +176,8 @@ public class Main extends JavaPlugin implements Listener {
                 }
             }, invincibilityTime * 20);
 
-            Bukkit.getScheduler().runTaskLater(this, () -> {
-                uhcManager.setPvPEnabled(true); // ✅ Active le PvP après l'invincibilité
-            }, invincibilityTime * 20);
+            int pvpTime = getConfig().getInt("pvp-timer", 10); // 10 min par défaut
+            uhcManager.startPvPTimer(pvpTime);
 
             // ⏳ Début du timer pour l'assignation des rôles et le passage à PLAYING
             int roleDelay = getConfig().getInt("role-announcement-delay", 10); // Récupère la valeur depuis config.yml (10 par défaut)
