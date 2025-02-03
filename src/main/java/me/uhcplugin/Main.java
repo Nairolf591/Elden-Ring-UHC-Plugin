@@ -35,6 +35,7 @@ public class Main extends JavaPlugin implements Listener {
     private ScoreboardManager scoreboardManager;
     private final Map<UUID, ItemStack[]> originalInventories = new HashMap<>();
     private final Map<UUID, ItemStack[]> originalArmor = new HashMap<>();
+    private UHCManager uhcManager;
 
     @Override
     public void onEnable() {
@@ -47,6 +48,9 @@ public class Main extends JavaPlugin implements Listener {
 
             // ✅ Initialiser ScoreboardManager AVANT GameManager
             scoreboardManager = new ScoreboardManager(this);
+            // ✅ Initialiser uhcManager
+            uhcManager = new UHCManager(this);
+
 
             // ✅ Charger l'état du jeu APRÈS avoir initialisé ScoreboardManager
             String savedState = getConfig().getString("game-state", "WAITING");
@@ -146,11 +150,13 @@ public class Main extends JavaPlugin implements Listener {
             uhcWorld.getWorldBorder().setCenter(center.getX(), center.getZ());
             uhcWorld.getWorldBorder().setSize(getConfig().getInt("border-size", 500));
 
-            Bukkit.broadcastMessage(ChatColor.RED + "🌍 La bordure a été positionnée et la partie commence !");
-
             // 🏁 Changer l'état de la partie en STARTING
             GameManager.setGameState(GameManager.GameState.STARTING);
             Bukkit.broadcastMessage(ChatColor.GOLD + "L'UHC démarre dans 10 secondes !");
+
+            uhcManager.clearDroppedItems(); // 🔄 Nettoie les items au sol au début
+            uhcManager.disableNaturalRegen(); // 🚫 Désactive la régénération naturelle
+            uhcManager.setPvPEnabled(false); // ❌ Désactive le PvP au début
 
             // 🚀 Téléporte chaque joueur aléatoirement dans la bordure
             for (Player p : Bukkit.getOnlinePlayers()) {
@@ -159,22 +165,20 @@ public class Main extends JavaPlugin implements Listener {
                 p.sendMessage(ChatColor.GREEN + "📌 Tu as été téléporté à un emplacement aléatoire !");
             }
 
-            // 🛡️ Active l'invincibilité
-            int invincibilityTime = getConfig().getInt("invincibility-duration", 90);
-            Bukkit.broadcastMessage(ChatColor.AQUA + "🛡️ Invincibilité activée pour " + invincibilityTime + " secondes !");
-
-            for (Player p : Bukkit.getOnlinePlayers()) {
-                p.setInvulnerable(true); // Rend le joueur invincible
-            }
+            // 🛡 Applique l'invincibilité après la téléportation
+            int invincibilityTime = getConfig().getInt("invincibility-duration", 90); // 90 secondes par défaut
+            uhcManager.startInvincibility(invincibilityTime);
 
             // ⏳ Désactive l'invincibilité après X secondes
             Bukkit.getScheduler().runTaskLater(this, () -> {
                 for (Player p : Bukkit.getOnlinePlayers()) {
                     p.setInvulnerable(false);
-                    p.sendMessage(ChatColor.RED + "⚔️ Tu n'es plus invincible !");
                 }
-                Bukkit.broadcastMessage(ChatColor.RED + "⚔️ L'invincibilité est terminée !");
-            }, invincibilityTime * 20L); // Convertit les secondes en ticks
+            }, invincibilityTime * 20);
+
+            Bukkit.getScheduler().runTaskLater(this, () -> {
+                uhcManager.setPvPEnabled(true); // ✅ Active le PvP après l'invincibilité
+            }, invincibilityTime * 20);
 
             // ⏳ Début du timer pour l'assignation des rôles et le passage à PLAYING
             int roleDelay = getConfig().getInt("role-announcement-delay", 10); // Récupère la valeur depuis config.yml (10 par défaut)

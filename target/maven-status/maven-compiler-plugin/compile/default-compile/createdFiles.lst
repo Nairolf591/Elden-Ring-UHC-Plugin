@@ -1,10 +1,12 @@
 me\uhcplugin\ConfirmStuffCommand.class
 me\uhcplugin\Main.class
+me\uhcplugin\UHCManager$1.class
 me\uhcplugin\Main$1.class
 me\uhcplugin\ScoreboardManager.class
 me\uhcplugin\RoleManager.class
 me\uhcplugin\CountdownTimer.class
 me\uhcplugin\CountdownTimer$1.class
+me\uhcplugin\UHCManager.class
 me\uhcplugin\GameManager$GameState.class
 me\uhcplugin\GameManager.class
 me\uhcplugin\RoleMenu.class
