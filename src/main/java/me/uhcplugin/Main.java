@@ -367,6 +367,12 @@ public class Main extends JavaPlugin implements Listener {
             return;
         }
 
+        // 📌 Gestion du bouton "Retour" (Flèche)
+        if (clickedItem.getType() == Material.ARROW) {
+            openMainMenu(player);
+            return;
+        }
+
         if (clickedItem == null || !clickedItem.hasItemMeta()) {
             Bukkit.getLogger().info("DEBUG - Objet cliqué null ou sans meta");
             return;
