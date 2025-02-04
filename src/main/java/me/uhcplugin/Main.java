@@ -239,7 +239,7 @@ public class Main extends JavaPlugin implements Listener {
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        player.setResourcePack("https://www.dropbox.com/scl/fi/yshrmt0gegagh1zgutmjx/UHC_EldenSounds.zip?rlkey=blvlp4dx0y3v9hf52wbvvb15a&dl=1");
+        player.setResourcePack("https://drive.google.com/uc?export=download&id=1AfIxZGkASbXDnCE1IY-l3DWyl6OZ5uE8");
         if (GameManager.getGameState() == GameManager.GameState.WAITING) {
             player.getInventory().clear();
             giveCompass(player);
