@@ -36,6 +36,8 @@ public class Main extends JavaPlugin implements Listener {
     private final Map<UUID, ItemStack[]> originalInventories = new HashMap<>();
     private final Map<UUID, ItemStack[]> originalArmor = new HashMap<>();
     private UHCManager uhcManager;
+    private GameManager gameManager;
+    private CampManager campManager;
 
     @Override
     public void onEnable() {
@@ -50,7 +52,12 @@ public class Main extends JavaPlugin implements Listener {
             scoreboardManager = new ScoreboardManager(this);
             // ✅ Initialiser uhcManager
             uhcManager = new UHCManager(this);
-
+            //Tout ce qui touche au manage de la game (role endgame ect...)
+            gameManager = new GameManager();
+            RoleManager roleManager = new RoleManager(this);
+            CampManager campManager = new CampManager(this, roleManager);
+            // Enregistre les gestionnaires d'événements si nécessaire
+            getServer().getPluginManager().registerEvents((Listener) roleManager, this);
 
             // ✅ Charger l'état du jeu APRÈS avoir initialisé ScoreboardManager
             String savedState = getConfig().getString("game-state", "WAITING");
@@ -685,7 +692,6 @@ public class Main extends JavaPlugin implements Listener {
         }
     }
 
-
     // Méthodes pour gérer l'inventaire original
     public ItemStack[] getOriginalInventory(UUID playerId) {
         return originalInventories.get(playerId);
@@ -716,5 +722,9 @@ public class Main extends JavaPlugin implements Listener {
         ItemStack backButton = createItem(Material.ARROW, ChatColor.GRAY + "Retour");
         previewInventory.setItem(53, backButton); // En bas à droite
         player.openInventory(previewInventory);
+    }
+
+    public GameManager getGameManager() {
+        return gameManager;
     }
 }

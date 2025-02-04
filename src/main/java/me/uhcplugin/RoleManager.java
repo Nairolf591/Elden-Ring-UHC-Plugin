@@ -1,65 +1,72 @@
 package me.uhcplugin;
 
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 import java.util.*;
 
 public class RoleManager {
     private final Main plugin;
-    private final Map<String, Boolean> roleStatus;
-    private final List<String> availableRoles;
-    private final Map<UUID, String> playerRoles;
+    private final Map<UUID, Role> playerRoles = new HashMap<>();
+    private final List<Role> availableRoles = Arrays.asList(Role.values()); // Liste des rôles possibles
 
     public RoleManager(Main plugin) {
         this.plugin = plugin;
-        this.roleStatus = new HashMap<>();
-        this.availableRoles = new ArrayList<>();
-        this.playerRoles = new HashMap<>();
-        loadRolesFromConfig();
     }
 
-    // Charge les rôles depuis le fichier config.yml
-    private void loadRolesFromConfig() {
-        FileConfiguration config = plugin.getConfig();
-        if (!config.contains("roles")) return;
+    // 🎭 Enumération des rôles disponibles
+    public enum Role {
+        RADAHN("Radahn", ChatColor.RED),
+        MELINA("Melina", ChatColor.LIGHT_PURPLE),
+        SANSECLAT("Sans-Éclat", ChatColor.GRAY),
+        MOHG("Mohg", ChatColor.DARK_RED),
+        MALIKETH("Maliketh", ChatColor.BLACK),
+        RYKARD("Rykard", ChatColor.GOLD),
+        RANNI("Ranni", ChatColor.BLUE),
+        MORGOTT("Morgott", ChatColor.DARK_GREEN),
+        GODRICK("Godrick", ChatColor.YELLOW);
 
-        for (String role : config.getConfigurationSection("roles").getKeys(false)) {
-            boolean isEnabled = config.getBoolean("roles." + role);
-            roleStatus.put(role, isEnabled);
-            if (isEnabled) {
-                availableRoles.add(role);
-            }
+        private final String displayName;
+        private final ChatColor color;
+
+        Role(String displayName, ChatColor color) {
+            this.displayName = displayName;
+            this.color = color;
+        }
+
+        public String getDisplayName() {
+            return color + displayName;
         }
     }
 
-    // Assigne les rôles aux joueurs
+    // 📌 Assigne un rôle aléatoire aux joueurs
     public void assignRoles() {
         List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
         Collections.shuffle(players);
         Collections.shuffle(availableRoles);
 
-        int roleCount = Math.min(players.size(), availableRoles.size());
-        for (int i = 0; i < roleCount; i++) {
-            Player player = players.get(i);
-            String role = availableRoles.get(i);
-            playerRoles.put(player.getUniqueId(), role);
-            player.sendMessage("§6[UHC] §aTu es " + role + " !");
+        for (int i = 0; i < players.size(); i++) {
+            if (i < availableRoles.size()) {
+                playerRoles.put(players.get(i).getUniqueId(), availableRoles.get(i));
+                players.get(i).sendMessage(ChatColor.GOLD + "🎭 Ton rôle est : " + availableRoles.get(i).getDisplayName());
+            }
         }
     }
 
-    // Récupère le rôle d'un joueur
-    public String getRole(Player player) {
-        return playerRoles.getOrDefault(player.getUniqueId(), "Sans rôle");
+    // 🎭 Retourne le rôle d'un joueur
+    public Role getRole(Player player) {
+        return playerRoles.getOrDefault(player.getUniqueId(), null);
     }
 
-    // Sauvegarde l'état des rôles dans la config
-    public void saveRolesToConfig() {
-        FileConfiguration config = plugin.getConfig();
-        for (Map.Entry<String, Boolean> entry : roleStatus.entrySet()) {
-            config.set("roles." + entry.getKey(), entry.getValue());
-        }
-        plugin.saveConfig();
+    // 🎭 Vérifie si un joueur a un rôle donné
+    public boolean hasRole(Player player, Role role) {
+        return playerRoles.getOrDefault(player.getUniqueId(), null) == role;
+    }
+
+    // 🎭 Retourne le rôle sous forme de String
+    public String getRoleName(Player player) {
+        Role role = getRole(player);
+        return role != null ? role.getDisplayName() : ChatColor.GRAY + "Aucun rôle";
     }
 }
