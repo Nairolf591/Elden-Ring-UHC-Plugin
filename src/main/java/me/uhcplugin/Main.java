@@ -38,6 +38,8 @@ public class Main extends JavaPlugin implements Listener {
     private UHCManager uhcManager;
     private GameManager gameManager;
     private CampManager campManager;
+    private RoleManager roleManager;
+
 
     @Override
     public void onEnable() {
@@ -57,7 +59,7 @@ public class Main extends JavaPlugin implements Listener {
             RoleManager roleManager = new RoleManager(this);
             CampManager campManager = new CampManager(this, roleManager);
             // Enregistre les gestionnaires d'événements si nécessaire
-            getServer().getPluginManager().registerEvents((Listener) roleManager, this);
+            getServer().getPluginManager().registerEvents(roleManager, this);
 
             // ✅ Charger l'état du jeu APRÈS avoir initialisé ScoreboardManager
             String savedState = getConfig().getString("game-state", "WAITING");

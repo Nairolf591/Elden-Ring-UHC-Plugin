@@ -3,10 +3,10 @@ package me.uhcplugin;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
-
+import org.bukkit.event.Listener;
 import java.util.*;
 
-public class RoleManager {
+public class RoleManager implements Listener{
     private final Main plugin;
     private final Map<UUID, Role> playerRoles = new HashMap<>();
     private final List<Role> availableRoles = Arrays.asList(Role.values()); // Liste des rôles possibles
@@ -14,6 +14,7 @@ public class RoleManager {
     public RoleManager(Main plugin) {
         this.plugin = plugin;
     }
+
 
     // 🎭 Enumération des rôles disponibles
     public enum Role {
