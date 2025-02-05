@@ -28,11 +28,3 @@ roles:
   Morgott: true
   Margit: true
   D_témoin_de_la_mort: true
-
-camps:
-  Sans-Éclat:
-    couleur: "GRAY"
-  Demi-Dieux:
-    couleur: "GOLD"
-
-
