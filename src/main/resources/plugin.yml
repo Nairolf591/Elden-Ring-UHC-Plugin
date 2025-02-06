@@ -46,10 +46,6 @@ commands:
     description: "Confirme et sauvegarde le stuff du joueur."
     usage: "/confirmstuff"
 
-
-
-
-
-
-
-
+  role:
+    description: "Affiche ton rôle, ton camp et ta capacité"
+    usage: "/role"
