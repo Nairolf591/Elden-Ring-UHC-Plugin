@@ -1,0 +1,214 @@
+Rôle;Camp;Compétence 1;Compétence 2;Compétence 3;Effet Spécial;Effet;Mana;;;;;Event couple ? Ranni et sans éclat ?
+Radahn;Solo Radahn;"1. Pluie de Météores ??
+Description : Radahn invoque plusieurs météores qui s’écrasent au sol, infligeant de lourds dégâts de zone.
+
+Effets :
+Invoque 3 à 5 météores tombant dans un rayon de 10 blocs autour de lui.
+Chaque météore inflige des dégâts bruts et repousse les ennemis.
+Temps de recharge :  5 minutes.
+";"2. Charge Écarlate ????
+Description : Radahn fonce sur ses ennemis à grande vitesse, les percutant violemment.
+
+Effets :
+Radahn accélère brutalement en ligne droite pendant 3 secondes.
+Tout joueur touché subit de lourds dégâts physiques et est projeté en arrière.
+Si utilisé en l’air, Radahn peut atterrir en créant une onde de choc (dégâts de zone).
+Temps de recharge : 1 jour.
+";"3. Arc Gravitationnel ???
+Description : Radahn bande son immense arc et tire une flèche chargée d’énergie gravitationnelle.
+
+Effets :
+Tire une flèche à très longue portée qui explose à l’impact.
+L’ennemi touché subit des dégâts massifs et est ralenti pendant 5 secondes.
+Si aucun joueur n’est touché, la flèche reste plantée et crée une zone de gravité réduisant la vitesse des joueurs proches.
+Temps de recharge : 5 minutes. *Mana 80 ?*";Si il tue Malenia, il souffrira de -1 coeur perma toutes les 1 jour;Force 10%, Résistance 5%, 2 coeur supp;100;;;;;Event : Bénédiction de la grâce, tape plus fort sur les méchant pendant un jour ? 5% de force ou 5% de resi ? Pour aide le village
+Melina;Bastion de la table ronde Melina;"1. Soin Divin ???
+Description : Melina canalise l’énergie sacrée pour soigner un joueur, lui octroyant une régénération divine.
+
+Effets :
+
+Applique Régénération II sur un joueur ciblé pendant 10 secondes.
+La régénération restaure 2 PV toutes les 2 secondes.
+Coût en Mana : 20.
+Temps de recharge : 4 minutes.";"2. Visions des Âmes ?????
+Description : Melina est capable de voir dans l’âme des joueurs et de découvrir leurs véritables intentions.
+
+Effets :
+
+Permet à Melina de spéculer un joueur pendant 10 secondes.
+À la fin de l’effet, elle reçoit une vision indiquant le camp du joueur (Gentil, Méchant ou Solo).
+Ne révèle pas le rôle exact, seulement l’allégeance.
+Coût en Mana : 70.
+Temps de recharge : 8 minutes.";"3. Appel Céleste ????
+Description : Melina invoque une lame dorée éthérée et la projette vers un ennemi, infligeant des dégâts sacrés. Cette attaque est guidée par la volonté des Deux Doigts et traverse les obstacles.
+
+Effets :
+
+Tire un projectile doré à une portée de 15 blocs.
+Dégâts : Inflige 4 cœurs de dégâts purs (ignore l’armure standard).
+Coût en Mana : 70.
+Temps de recharge : 5 minutes.";Connais qui est le sans-éclat et sais si le sans éclat se tourne vers la flame éxaltée;Speed 5% et 2 coeur supplémentaire;100;;;;;"Feu de Grâce ?? (Points de Rassemblement & Résurrection Partielle)
+?? Mécanique :
+
+Au début du jeu, 3 feux de grâce sont placés aléatoirement sur la carte.
+Lorsqu’un villageois meurt, il a 5% de chances de ressusciter à un feu de grâce avec 1 cœur (si un feu est encore actif).
+Les villageois peuvent interagir avec un feu pour récupérer Régénération I pendant 10 sec. Les feux de camps peuvent être éteint par les méchants."
+Sans-éclat;Bastion de la table ronde Sans-éclat ;"1. Lame Transcendante ????
+Description : Le Sans Éclats canalise sa force intérieure et libère une coup de lame énergétique qui traverse les ennemis.
+
+Effets :
+
+Portée : 10 blocs en ligne droite.
+Dégâts : 2 cœurs,
+Perforation : La lame traverse jusqu’à 3 ennemis.
+Coût en Mana : 30.
+Temps de recharge : 2 minutes.";"2. Cri du Guerrier ?????
+Description : Le Sans Éclats pousse un cri bestial, inspiré de l’Ash of War Lion’s Claw, lui permettant de bondir et d’attaquer avec une violence extrême.
+
+Effets :
+
+Le joueur saute en avant de 5 blocs et frappe violemment le sol.
+Dégâts de zone : Inflige 6 cœurs aux ennemis dans un rayon de 3 blocs.
+Effet de renversement : Les ennemis touchés sont repoussés et ralentis pendant 3 secondes.
+Coût en Mana : 50.
+Temps de recharge : 5 minutes.";"3. Frappe Rapide ????
+Description : Le Sans Éclats effectue une attaque éclair avec une précision inégalée, frappant son adversaire deux fois en une fraction de seconde.
+
+Effets :
+
+Première frappe : Inflige 2 cœurs de dégâts.
+Déplacement instantané : Le joueur se téléporte de 2 blocs en avant au moment de l’attaque.
+Coût en Mana : 0.
+Temps de recharge : 4 minutes.";Possède 5 statistique à mettre à un feu de camps auprès de Melina, il peux sois gagner 1 demi coeur, ou des pourcentages d'effet, ou bien avoir plus de mana;Aucun effet de base, dépends des stats mis, 1 point = 2-3%;100 (peux changer);;;;;
+Ranni;Camp de la lune Ranni, fait parti du Bastion de la table Ronde;"1. Éclipse Lunaire ????
+Description : Ranni invoque un cercle magique céleste au-dessus de sa position. Après 2 secondes, une explosion astrale s’abat sur la zone, infligeant des dégâts magiques aux ennemis pris dedans.
+
+Effets :
+
+Zone d’effet : Rayon de 6 blocs autour de Ranni.
+Dégâts : 3 cœurs de dégâts magiques.
+Désorientation : Applique Nausea I et Slowness I aux ennemis touchés pendant 5 secondes.
+Coût en Mana : 30.
+Temps de recharge : 4 minutes.";"Pas de la Lune Noire ???
+Description : Ranni disparaît dans une brume stellaire et se téléporte instantanément à une position ciblée dans un rayon de 15 blocs. Elle laisse derrière elle une illusion astrale qui attire l’attention des ennemis avant d’exploser.
+
+Effets :
+
+Téléportation instantanée jusqu'à 15 blocs dans la direction regardée.
+Leurre magique : Une illusion de Ranni reste sur place pendant 3 secondes, trompant les ennemis.
+Coût en Mana : 15.
+Temps de recharge : 10 minutes.";"3. Froid Stellaire ????
+Description : Ranni invoque une tempête de magie glaciale qui ralentit ses ennemis et les empêche d’attaquer efficacement.
+
+Effets :
+
+Zone d’effet : Rayon de 5 blocs autour d’elle.
+Ralentissement : Applique Slowness II et Mining Fatigue I aux ennemis pendant 6 secondes.
+Dégâts : 3 cœurs de dégâts magiques initiaux.
+Coût en Mana : 20.
+Temps de recharge : 3 minutes.
+";Connais tout son camps si présent et possède une réduction des dégats magiques;;180;;;;;
+Godrick;Boss de l'entre terre (ensemble sinon trop de camps) Godrick;"""Héritage Usurpé"" ????
+Description : Godrick manipule son essence et prend temporairement l’apparence et l’aura d’un autre camp. Son rôle apparait différemment aux joueurs qui l’inspectent avec des compétences ou des effets de détection.
+
+Effets :
+
+Pendant 1 jour, si un joueur tente de scanner son rôle avec une compétence (exemple : Visions des Âmes de Melina), Godrick apparaîtra comme un Gentil.
+
+Temps de recharge : 1 jour.";"1. Crâne de Fer ?????
+Description : Godrick invoque un crâne géant fait de métal et de débris qui écrase les ennemis dans un rayon autour de lui. L'impact inflige des dégâts massifs et applique un effet de choc aux ennemis proches, les désorientant.
+
+Effets :
+
+Dégâts : Inflige 3 cœurs de dégâts physiques dans un rayon de 4 blocs autour de Godrick.
+Effet de Choc : Applique Slowness II et Nausea I pendant 2 secondes aux ennemis touchés.
+Coût en Vie : Godrick perd 1 cœur de sa vie en utilisant cette compétence.
+Temps de recharge : 4 minutes.";"2. Souffle du Dragon ????
+Description : En puisant dans la puissance de son héritage draconique, Godrick projette un souffle de feu ardent qui brûle tout sur son passage. Le souffle inflige des dégâts continus aux ennemis et les empêche de régénérer.
+
+Effets :
+
+Dégâts : Inflige 1 cœurs de dégâts par seconde à tous les ennemis dans une ligne droite (portée de 10 blocs).
+Affliction de Brûlure : Brule pendant 10 secondes pour tous les ennemis touchés.
+Coût en Vie : Godrick perd 0,5 cœur à chaque utilisation de cette capacité.
+Temps de recharge : 6 minutes.
+";;Résistance 10%, 2 coeur supp;0;;;;;
+Morgott;Boss de l'entre terre (ensemble sinon trop de camps) Morgott;"1. ""Épée du Présage"" ???
+Description : Morgott manifeste une épée sacrée dorée et effectue une attaque éclair qui transperce son ennemi, ignorant une partie de son armure.
+
+Effets :
+
+Dégâts : Inflige 3 cœurs de dégâts directs.
+Ignore 10% de l’armure de la cible.
+Applique Weakness I pendant 3 secondes sur l’ennemi touché.
+Portée : 5 blocs (attaque en ligne droite).
+Temps de recharge : 4 minutes.";"2. ""Ombre du Présage"" ??????
+Description : Morgott devient intangible pendant un court instant, lui permettant de fuir ou d’esquiver des attaques.
+
+Effets :
+
+Morgott devient invisible pendant 4 secondes.
+Il gagne +20% de Vitesse pendant cette durée.
+S’il attaque ou subit un dégât, l’invisibilité disparaît immédiatement.
+Temps de recharge : 1 jour.";"3. ""Courroux du Présage"" ????
+Description : Morgott libère une explosion d’énergie sacrée, repoussant les ennemis proches et augmentant temporairement sa puissance.
+
+Effets :
+
+Repousse tous les ennemis dans un rayon de 5 blocs.
+Inflige 2 cœurs de dégâts de zone.
+Morgott gagne +5% de Force et +10% de Vitesse pendant 5 secondes.
+Temps de recharge : 4 minutes.";Empoisonnement passif : 1 chance sur 4 de donner poison pendant 1-2 sec à chaque hit;Aucun;;;;;;
+Margit;Boss de l'entre terre (ensemble sinon trop de camps) Margit;"1. ""Fouet Spectral"" ????
+Effet en jeu :
+
+Margit lance un fouet invisible devant lui (simulé par une attaque en cône).
+Les joueurs touchés sont ralentis (Slowness II, 3 sec) et prennent 2 cœurs de dégâts.
+Message d’alerte aux victimes : ""Vous êtes frappé par le Fouet Spectral de Margit !"" Temps de recharge : 4 minutes.";"2. ""Marque de l’Augure"" ?????
+Effet en jeu :
+
+Margit cible un joueur à 10 blocs avec un clic droit sur une épée en or (ou un autre item défini).
+La cible reçoit un effet de lueur (Glowing) pendant 3 secondes.
+Ses dégâts sont augmenter de 10% quand Margit tape ce joueur marqué (réalisable en modifiant le damageEvent).
+Message d’alerte : ""Vous êtes marqué par l’Augure !"" pour la victime.Temps de recharge : 6 minutes.";"3. ""Bond de l’Augure"" ????
+Effet en jeu :
+
+Margit effectue un énorme saut en l’air (5 blocs de hauteur).
+Il retombe et inflige 3 cœurs de dégâts aux joueurs à 3 blocs autour de lui.
+Applique une nausée (Nausea, 3 sec) aux joueurs touchés, simulant un choc brutal.
+Ne subit pas de dégâts de chute. Temps de recharge : 1 jour.";;Aucun;0;;;;;
+D_témoin_de_la_mort;Bastion de la table ronde D_témoin_de_la_mort;"1. ""Marque de la Chasse Divine"" ????
+?? Effet en jeu :
+
+D marque un ennemi en lui appliquant Glowing (15 sec), permettant à ses alliés de le voir à travers les blocs.
+La cible subit 10% de dégâts en plus venant de D et de ses alliés pendant la durée de l'effet.
+Si la cible meurt sous l'effet de la marque, D gagne Régénération I (15 sec). Temps de recharge : 5 minutes Mana : 50";"2. ""Jugement du Cercueil"" ????
+?? Effet en jeu :
+
+D crée une zone de jugement (5 blocs de rayon) autour de lui pendant 6 secondes.
+Tous les ennemis dans cette zone subissent Faiblesse I et Lenteur I tant qu’ils y restent.
+Si un ennemi meurt dans cette zone, D récupère 2 cœurs et réduit le cooldown de ses autres compétences de 5 sec.
+Temps de recharge : 1 jour Mana : 80";"3. ""Épée de la Mort"" ????
+?? Effet en jeu :
+
+D charge une attaque lourde qui inflige +30% de dégâts sur la prochaine attaque.
+Si cette attaque touche, la cible subit un effet de lenteur (Slowness I, 3 sec) en plus des dégâts.
+Si la cible est un mort-vivant, elle subit des dégâts bruts supplémentaires (1 cœur en vrai dégâts). Temps de recharge : 1 jour, Mana : 40";"""Fléau des Morts"" ????
+?? Effet en jeu :
+
+D inflige 30% de dégâts en plus contre les ennemis ayant un effet de type Wither, Poison ou Lenteur.
+Les attaques de D dissipent Wither et Poison sur lui-même s’il en est affecté.
+Si D tue un ennemi sous l'effet de Wither, il gagne Force 10% (15 sec).";Force 5%;120;;;;;
+Blaid;Camp de la lune Blaid, fait parti du Bastion de la table Ronde;"1?? Lame Lunaire ?? (Attaque Chargée)
+?? Effet : Blaidd attaque avec une épée lunaire imprégnée d'énergie mystique, infligeant 2,5 cœurs de dégâts et laissant un effet de brûlure sur l'ennemi pendant 5 sec (1 cœur de dégât par seconde). Temps de recharge : 2 minutes. Mana : 30";"2?? Bond Sauvage ?? (Mobilité et Esquive)
+?? Effet : Blaidd fait un bond spectaculaire en avant sur 7 blocs, infligeant 2 cœur de dégâts en touchant l'ennemi et augmentant sa vitesse de déplacement de Speed II (5 sec).
+?? Délai de récupération : 2 minutes Mana : 30";"3?? Hurlement Sanguinaire ?? (Effet de Groupe)
+?? Effet : Blaidd lance un hurlement puissant, inspirant la peur à ses ennemis proches (sur une portée de 10 blocs), ce qui inflige un effet de faiblesse (Weakness I) pendant 20 sec. De plus, il reçoit un buff de Force I (15 sec).
+?? Délai de récupération : 5 minutes Mana : 50";Ranni connait qui il est mais il ne connait personne.;Speed 20%;100;;;;;
+;;;;;;;;;;;;
+;;;;;;;;;;;;
+;;;;;;;;;;;;
+;;;;;;;;;;;;
+Maliketh;Peux changer de phase 1 fois dans la game ce qui change son aura;;;;;;;;;;;
+;;;;;;;;;;;;
+;;;;;Buff si Ranni autour;;;;;;;
