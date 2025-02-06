@@ -1,3 +1,4 @@
+me\uhcplugin\CampManager.class
 me\uhcplugin\ConfirmStuffCommand.class
 me\uhcplugin\Main.class
 me\uhcplugin\UHCManager$1.class
@@ -8,6 +9,8 @@ me\uhcplugin\Camp.class
 me\uhcplugin\CountdownTimer.class
 me\uhcplugin\CountdownTimer$1.class
 me\uhcplugin\UHCManager.class
+me\uhcplugin\CampManager$1.class
 me\uhcplugin\GameManager$GameState.class
 me\uhcplugin\GameManager.class
+me\uhcplugin\CampManager$Camp.class
 me\uhcplugin\RoleMenu.class
