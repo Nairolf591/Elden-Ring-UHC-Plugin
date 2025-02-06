@@ -4,6 +4,7 @@ me\uhcplugin\UHCManager$1.class
 me\uhcplugin\Main$1.class
 me\uhcplugin\ScoreboardManager.class
 me\uhcplugin\RoleManager.class
+me\uhcplugin\Camp.class
 me\uhcplugin\CountdownTimer.class
 me\uhcplugin\CountdownTimer$1.class
 me\uhcplugin\UHCManager.class

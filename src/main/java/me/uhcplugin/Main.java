@@ -3,6 +3,7 @@ package me.uhcplugin;
 import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -36,6 +37,7 @@ public class Main extends JavaPlugin implements Listener {
     private final Map<UUID, ItemStack[]> originalInventories = new HashMap<>();
     private final Map<UUID, ItemStack[]> originalArmor = new HashMap<>();
     private UHCManager uhcManager;
+    private RoleManager roleManager;
 
     @Override
     public void onEnable() {
@@ -45,12 +47,48 @@ public class Main extends JavaPlugin implements Listener {
 
         try {
             saveDefaultConfig();
+            Bukkit.getLogger().info("[DEBUG] 📌 savedRoles existe ? " + getConfig().contains("savedRoles"));
+            Bukkit.getLogger().info("[DEBUG] Contenu du fichier config.yml :");
+            Bukkit.getLogger().info(getConfig().saveToString());
+            if (getConfig().contains("savedRoles")) {
+                Bukkit.getLogger().info("[DEBUG] 📌 savedRoles existe dans la config !");
+            } else {
+                Bukkit.getLogger().warning("[DEBUG] ❌ savedRoles est manquant !");
+            }
+
+            // 🔄 Restaure les rôles depuis la config
+            if (getConfig().contains("savedRoles")) {
+                ConfigurationSection section = getConfig().getConfigurationSection("savedRoles");
+                if (section != null) { // Vérifie que la section n'est pas NULL
+                    for (String key : section.getKeys(false)) {
+                        try {
+                            UUID playerUUID = UUID.fromString(key);
+                            String role = getConfig().getString("savedRoles." + key);
+                            RoleManager.getPlayerRoles().put(playerUUID, role);
+                        } catch (IllegalArgumentException e) {
+                            Bukkit.getLogger().warning("[DEBUG] ❌ Erreur de conversion d'UUID : " + key);
+                        }
+                    }
+                    Bukkit.getLogger().info("[DEBUG] Rôles restaurés depuis la config : " + RoleManager.getPlayerRoles());
+                } else {
+                    Bukkit.getLogger().info("[DEBUG] 📌 savedRoles chargés : " + getConfig().getConfigurationSection("savedRoles"));
+                }
+            } else {
+                Bukkit.getLogger().warning("[UHCPlugin] 🚨 'savedRoles' n'existe pas dans la config !");
+            }
+            if (!getConfig().contains("savedRoles")) {
+                getConfig().set("savedRoles", new HashMap<String, String>()); // Initialise si absent
+                saveConfig();
+                Bukkit.getLogger().info("[UHCPlugin] 📌 'savedRoles' était manquant et a été ajouté !");
+            }
 
             // ✅ Initialiser ScoreboardManager AVANT GameManager
             scoreboardManager = new ScoreboardManager(this);
             // ✅ Initialiser uhcManager
             uhcManager = new UHCManager(this);
-
+            //Scoreboard camps et roles
+            this.getCommand("role").setExecutor(new RoleManager(this));
+            roleManager = new RoleManager(this);
 
             // ✅ Charger l'état du jeu APRÈS avoir initialisé ScoreboardManager
             String savedState = getConfig().getString("game-state", "WAITING");
@@ -81,6 +119,10 @@ public class Main extends JavaPlugin implements Listener {
     @Override
     public void onDisable() {
         Bukkit.getLogger().info("[UHCPlugin] Le plugin est désactivé !");
+    }
+
+    public RoleManager getRoleManager() {
+        return roleManager;
     }
 
     public Location getRandomSpawnLocation(World world, Location center, double borderSize) {
@@ -184,8 +226,13 @@ public class Main extends JavaPlugin implements Listener {
             int ticks = roleDelay * 20; // Convertit en ticks (1s = 20 ticks)
 
             Bukkit.broadcastMessage(ChatColor.GOLD + "📢 Attribution des rôles dans " + roleDelay + " secondes...");
-            new CountdownTimer(this, roleDelay, (secondsLeft) -> {
-                scoreboardManager.updateRoleTimer(secondsLeft);
+
+            new CountdownTimer(this, roleDelay, (Integer secondsLeft) -> {
+                if (scoreboardManager != null) {
+                    scoreboardManager.updateRoleTimer(secondsLeft);
+                } else {
+                    Bukkit.getLogger().warning("[UHCPlugin] ❌ Impossible de mettre à jour le timer, ScoreboardManager est null !");
+                }
             }).start();
 
             Bukkit.getScheduler().runTaskLater(this, () -> {
@@ -261,17 +308,11 @@ public class Main extends JavaPlugin implements Listener {
     public void onInventoryClick(InventoryClickEvent event) {
         ItemStack clickedItem = event.getCurrentItem(); // ✅ Déclaré une seule fois ici
 
-        // 🔍 Debug : Voir si l'événement est bien capté
-        Bukkit.getLogger().info("DEBUG - onInventoryClick détecté");
-
         // Vérifie que l'objet n'est pas null et a bien un ItemMeta
         if (clickedItem == null || !clickedItem.hasItemMeta()) return;
 
         Player player = (Player) event.getWhoClicked();
         String inventoryTitle = event.getView().getTitle();
-
-        // 🔍 Debug : Voir quel menu est détecté
-        Bukkit.getLogger().info("DEBUG - Menu détecté : " + inventoryTitle);
 
         // 🛑 Bloque le déplacement des items pour tous les menus
         if (inventoryTitle.contains("Configuration") || inventoryTitle.contains("Stuff") || inventoryTitle.contains("UHC")) {
@@ -281,7 +322,6 @@ public class Main extends JavaPlugin implements Listener {
         // 📌 Gestion du menu "Configuration UHC"
         if (inventoryTitle.equals(ChatColor.YELLOW + "Configuration UHC")) {
             event.setCancelled(true);
-            Bukkit.getLogger().info("DEBUG - Clic dans Configuration UHC");
             handleConfigMenuClick(player, clickedItem, event);
             return;
         }
@@ -289,7 +329,6 @@ public class Main extends JavaPlugin implements Listener {
         // 📌 Gestion du menu "Configuration du Stuff"
         if (inventoryTitle.equals(ChatColor.GOLD + "Configuration du Stuff")) {
             event.setCancelled(true);
-            Bukkit.getLogger().info("DEBUG - Clic dans Configuration du Stuff");
             handleStuffConfigMenuClick(player, clickedItem);
             return;
         }
@@ -298,7 +337,6 @@ public class Main extends JavaPlugin implements Listener {
         if (inventoryTitle.equals(ChatColor.GOLD + "Aperçu du Stuff")) {
             event.setCancelled(true);
             if (clickedItem.getType() == Material.ARROW) {
-                Bukkit.getLogger().info("DEBUG - Retour Aperçu du Stuff");
                 openStuffConfigMenu(player);
             }
             return;
@@ -307,7 +345,6 @@ public class Main extends JavaPlugin implements Listener {
         // 📌 Gestion du menu "Menu UHC"
         if (inventoryTitle.equals(ChatColor.GOLD + "Menu UHC")) {
             event.setCancelled(true);
-            Bukkit.getLogger().info("DEBUG - Clic dans Menu UHC");
             handleMainMenuClick(player, clickedItem);
             return;
         }
@@ -315,12 +352,10 @@ public class Main extends JavaPlugin implements Listener {
         // ✅ Ajout des boutons spécifiques au menu Configuration
         switch (clickedItem.getType()) {
             case ARROW:
-                Bukkit.getLogger().info("DEBUG - Bouton Retour cliqué");
                 openMainMenu(player);
                 break;
 
             case BARRIER:
-                Bukkit.getLogger().info("DEBUG - Bouton Bordure cliqué");
                 if (!player.hasPermission("uhcplugin.config")) {
                     player.sendMessage(ChatColor.RED + "❌ Tu n'as pas la permission de modifier la configuration !");
                     return;
@@ -337,7 +372,6 @@ public class Main extends JavaPlugin implements Listener {
                 break;
 
             case DIAMOND_SWORD:
-                Bukkit.getLogger().info("DEBUG - Bouton PvP Timer cliqué");
                 if (!player.hasPermission("uhcplugin.config")) return;
                 int currentPvpTime = getConfig().getInt("pvp-timer", 10);
                 if (event.isLeftClick()) currentPvpTime += 1;
@@ -349,7 +383,6 @@ public class Main extends JavaPlugin implements Listener {
                 break;
 
             case PAPER:
-                Bukkit.getLogger().info("DEBUG - Bouton Temps rôles cliqué");
                 if (!player.hasPermission("uhcplugin.config")) return;
                 int currentRoleTime = getConfig().getInt("role-announcement-delay", 10);
                 if (event.isLeftClick()) currentRoleTime += 5;
@@ -361,7 +394,6 @@ public class Main extends JavaPlugin implements Listener {
                 break;
 
             case BOOK:
-                Bukkit.getLogger().info("DEBUG - Bouton Gérer les Rôles cliqué");
                 if (player.hasPermission("uhcplugin.config")) {
                     new RoleMenu(this).openRoleMenu(player);
                 } else {
@@ -394,12 +426,10 @@ public class Main extends JavaPlugin implements Listener {
         }
 
         if (clickedItem == null || !clickedItem.hasItemMeta()) {
-            Bukkit.getLogger().info("DEBUG - Objet cliqué null ou sans meta");
             return;
         }
 
         String itemName = ChatColor.stripColor(clickedItem.getItemMeta().getDisplayName());
-        Bukkit.getLogger().info("DEBUG - Item cliqué : " + itemName);
 
         // 📏 Modifier la taille de la bordure
         if (itemName.contains("Bordure")) {
@@ -683,16 +713,6 @@ public class Main extends JavaPlugin implements Listener {
         else if (clickedItem.getType() == Material.ARROW) {
             openConfigMenu(player);
         }
-    }
-
-
-    // Méthodes pour gérer l'inventaire original
-    public ItemStack[] getOriginalInventory(UUID playerId) {
-        return originalInventories.get(playerId);
-    }
-
-    public ItemStack[] getOriginalArmor(UUID playerId) {
-        return originalArmor.get(playerId);
     }
 
     public void clearSavedInventory(UUID playerId) {

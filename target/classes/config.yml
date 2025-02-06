@@ -1,32 +1,30 @@
+
 jump-location:
-  world: "world"
+  world: world
   x: -219.56
-  y: 20.00
-  z: 102.50
-  yaw: + 230
+  y: 20.0
+  z: 102.5
+  yaw: 230
   pitch: 0
 
 spawn-location:
-  world: "world"
+  world: world
   x: -264.44
-  y: 19.00
+  y: 19.0
   z: 108.41
   yaw: 0
   pitch: 0
 
-# src/main/resources/config.yml
 roles:
-  Radahn: true
-  Melina: true
+  Radahn: false
+  Melina: false
   Sans-éclat: true
-  Ranni: true
-  Godrick: true
+  Ranni: false
+  Godrick: false
   Morgott: true
-  Margit: true
-  D_témoin_de_la_mort: true
+  Margit: false
+  D_témoin_de_la_mort: false
 
-pvp-timer: 10  # Temps en minutes avant l'activation du PvP
-border-size: 100
-role-announcement-delay: 10
-invincibility-duration: 90 # Temps en secondes (1m30)
-
+pvp-timer: 1
+border-size: 400
+role-announcement-delay: 15

@@ -28,12 +28,10 @@ commands:
   jump:
     description: Téléporte le joueur au jump
     usage: /jump
-    permission: uhcplugin.jump
 
   spawn:
     description: Téléporte le joueur au spawn
     usage: /spawn
-    permission: uhcplugin.spawn
 
   enduhc:
     description: "Forcer la fin de la partie UHC"
@@ -48,10 +46,6 @@ commands:
     description: "Confirme et sauvegarde le stuff du joueur."
     usage: "/confirmstuff"
 
-
-
-
-
-
-
-
+  role:
+    description: "Affiche ton rôle, ton camp et ta capacité"
+    usage: "/role"
