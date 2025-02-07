@@ -48,6 +48,12 @@ commands:
     description: "Confirme et sauvegarde le stuff du joueur."
     usage: "/confirmstuff"
 
+  testparticles:
+    description: "Teste l'affichage des particules sur Geyser"
+    usage: "/testparticles"
+    permission: uhcplugin.testparticles
+
+
 
 
 
