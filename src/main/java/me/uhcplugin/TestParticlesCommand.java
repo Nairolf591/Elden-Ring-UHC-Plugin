@@ -1,4 +1,4 @@
-package me.uhcplugin.commands;
+package me.uhcplugin;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
