@@ -39,6 +39,7 @@ public class Main extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
+    this.getCommand("testparticles").setExecutor(new TestParticlesCommand(this));
         instance = this;
         Bukkit.getLogger().info("[UHCPlugin] Le plugin est en cours d'activation...");
         this.getCommand("confirmstuff").setExecutor(new ConfirmStuffCommand(this));
