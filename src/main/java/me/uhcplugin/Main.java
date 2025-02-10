@@ -40,6 +40,7 @@ public class Main extends JavaPlugin implements Listener {
     private UHCManager uhcManager;
     private RoleManager roleManager;
     private ManaManager manaManager;
+    private RanniRole ranniRole;
 
     @Override
     public void onEnable() {
@@ -48,12 +49,14 @@ public class Main extends JavaPlugin implements Listener {
         this.getCommand("confirmstuff").setExecutor(new ConfirmStuffCommand(this));
         getCommand("checkrole").setExecutor(new RoleManager(this));
         manaManager = new ManaManager(this);
-        getServer().getPluginManager().registerEvents(new RanniRole(this), this);
+
+        //Ranni
+        ranniRole = new RanniRole(this);
+        getServer().getPluginManager().registerEvents(ranniRole, this);
+
 
         try {
             saveDefaultConfig();
-            Bukkit.getLogger().info("[DEBUG] 📌 savedRoles existe ? " + getConfig().contains("savedRoles"));
-            Bukkit.getLogger().info("[DEBUG] Contenu du fichier config.yml :");
             Bukkit.getLogger().info(getConfig().saveToString());
             // 🔄 Restaure les rôles depuis la config
             if (getConfig().contains("savedRoles")) {
@@ -122,6 +125,10 @@ public class Main extends JavaPlugin implements Listener {
 
     public RoleManager getRoleManager() {
         return roleManager;
+    }
+
+    public RanniRole getRanniRole() {
+        return ranniRole;
     }
 
     public ManaManager getManaManager() {

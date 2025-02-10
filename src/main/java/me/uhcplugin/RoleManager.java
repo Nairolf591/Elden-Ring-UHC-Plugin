@@ -93,6 +93,11 @@ public class RoleManager implements CommandExecutor {
             player.sendMessage("§6[UHC] §aTu es " + role + " ! Camp : " + roleCamps.get(role).getDisplayName());
             plugin.getManaManager().assignManaBasedOnRole(player); // ✅ Ajout du mana selon le rôle
             plugin.getScoreboardManager().setPlayerScoreboard(player);
+
+            // ✅ Si c'est Ranni, on lui donne son artefact unique
+            if (role.equalsIgnoreCase("Ranni")) {
+                plugin.getRanniRole().giveArtifactToRanni(player);
+            }
         }
 
         // ✅ CORRECTION : Sauvegarde proprement les rôles en convertissant UUID en String
