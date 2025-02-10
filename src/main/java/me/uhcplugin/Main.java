@@ -38,24 +38,21 @@ public class Main extends JavaPlugin implements Listener {
     private final Map<UUID, ItemStack[]> originalArmor = new HashMap<>();
     private UHCManager uhcManager;
     private RoleManager roleManager;
+    private ManaManager manaManager;
 
     @Override
     public void onEnable() {
         instance = this;
         Bukkit.getLogger().info("[UHCPlugin] Le plugin est en cours d'activation...");
         this.getCommand("confirmstuff").setExecutor(new ConfirmStuffCommand(this));
+        getCommand("checkrole").setExecutor(new RoleManager(this));
+        manaManager = new ManaManager(this);
 
         try {
             saveDefaultConfig();
             Bukkit.getLogger().info("[DEBUG] 📌 savedRoles existe ? " + getConfig().contains("savedRoles"));
             Bukkit.getLogger().info("[DEBUG] Contenu du fichier config.yml :");
             Bukkit.getLogger().info(getConfig().saveToString());
-            if (getConfig().contains("savedRoles")) {
-                Bukkit.getLogger().info("[DEBUG] 📌 savedRoles existe dans la config !");
-            } else {
-                Bukkit.getLogger().warning("[DEBUG] ❌ savedRoles est manquant !");
-            }
-
             // 🔄 Restaure les rôles depuis la config
             if (getConfig().contains("savedRoles")) {
                 ConfigurationSection section = getConfig().getConfigurationSection("savedRoles");
@@ -123,6 +120,10 @@ public class Main extends JavaPlugin implements Listener {
 
     public RoleManager getRoleManager() {
         return roleManager;
+    }
+
+    public ManaManager getManaManager() {
+        return manaManager;
     }
 
     public Location getRandomSpawnLocation(World world, Location center, double borderSize) {

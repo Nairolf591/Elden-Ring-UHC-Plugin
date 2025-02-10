@@ -71,23 +71,6 @@ public class GameManager {
         return currentState == GameState.ENDED;
     }
 
-    public void endGame(CampManager.Camp winningCamp) {
-        // 📌 Affiche le gagnant
-        Bukkit.broadcastMessage(ChatColor.GOLD + "🏆 Le camp " + winningCamp.getDisplayName() + " remporte la partie !");
-
-        // 📌 Passe le jeu à l'état TERMINÉ
-        setGameState(GameState.ENDED);
-
-        // 📌 Change tous les joueurs en mode spectateur
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            player.sendMessage(ChatColor.RED + "🎮 La partie est terminée !");
-            player.setGameMode(org.bukkit.GameMode.SPECTATOR);
-        }
-
-        // 📌 Optionnel : Réinitialisation des données (ex: bordure, rôles, inventaires)
-        resetGame();
-    }
-
     // ✅ Fonction pour reset le jeu si nécessaire
     private void resetGame() {
         Bukkit.broadcastMessage(ChatColor.GRAY + "🔄 Réinitialisation du serveur...");

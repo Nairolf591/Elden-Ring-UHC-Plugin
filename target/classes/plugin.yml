@@ -49,3 +49,13 @@ commands:
   role:
     description: "Affiche ton rôle, ton camp et ta capacité"
     usage: "/role"
+
+  checkrole:
+    description: Permet aux admins de voir le rôle d’un joueur.
+    usage: /checkrole <joueur>
+    permission: uhcplugin.checkrole
+
+permissions:
+  uhcplugin.checkrole:
+    description: Permet aux admins de voir le rôle d’un joueur.
+    default: op
