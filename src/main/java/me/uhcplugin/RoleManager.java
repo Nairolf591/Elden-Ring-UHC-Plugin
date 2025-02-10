@@ -48,7 +48,7 @@ public class RoleManager implements CommandExecutor {
         roleCamps.put("Radahn", Camp.DEMI_DIEUX);
         roleCamps.put("Melina", Camp.SOLITAIRES);
         roleCamps.put("Sans-éclat", Camp.SOLITAIRES);
-        roleCamps.put("Ranni", Camp.DEMI_DIEUX);
+        roleCamps.put("Ranni", Camp.SOLITAIRES);
         roleCamps.put("Godrick", Camp.DEMI_DIEUX);
         roleCamps.put("Morgott", Camp.DEMI_DIEUX);
         roleCamps.put("Margit", Camp.DEMI_DIEUX);
@@ -203,5 +203,10 @@ public class RoleManager implements CommandExecutor {
     public static Map<UUID, String> getPlayerRoles() {
         return playerRoles;
     }
+
+    public void setRole(Player player, String role) {
+        playerRoles.put(player.getUniqueId(), role);
+    }
+
 
 }

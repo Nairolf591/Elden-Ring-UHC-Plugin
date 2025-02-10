@@ -1,5 +1,6 @@
 package me.uhcplugin;
 
+import me.uhcplugin.roles.RanniRole;
 import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -47,6 +48,7 @@ public class Main extends JavaPlugin implements Listener {
         this.getCommand("confirmstuff").setExecutor(new ConfirmStuffCommand(this));
         getCommand("checkrole").setExecutor(new RoleManager(this));
         manaManager = new ManaManager(this);
+        getServer().getPluginManager().registerEvents(new RanniRole(this), this);
 
         try {
             saveDefaultConfig();

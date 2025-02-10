@@ -3,6 +3,7 @@ me\uhcplugin\Main.class
 me\uhcplugin\UHCManager$1.class
 me\uhcplugin\Main$1.class
 me\uhcplugin\ManaManager.class
+me\uhcplugin\roles\RanniRole.class
 me\uhcplugin\ScoreboardManager.class
 me\uhcplugin\RoleManager.class
 me\uhcplugin\Camp.class
