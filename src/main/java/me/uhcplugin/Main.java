@@ -50,10 +50,11 @@ public class Main extends JavaPlugin implements Listener {
         getCommand("checkrole").setExecutor(new RoleManager(this));
         manaManager = new ManaManager(this);
 
-        //Ranni
+        // Ranni
         ranniRole = new RanniRole(this);
         getServer().getPluginManager().registerEvents(ranniRole, this);
         ranniRole.startNightResistanceTask();
+        getCommand("lecture").setExecutor(ranniRole);
 
         try {
             saveDefaultConfig();

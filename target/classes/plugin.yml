@@ -55,7 +55,16 @@ commands:
     usage: /checkrole <joueur>
     permission: uhcplugin.checkrole
 
+  lecture:
+    description: "Permet à Ranni d'analyser le rôle d'un joueur"
+    usage: "/lecture <joueur>"
+    permission: uhcplugin.ranni.lecture
+
 permissions:
+  uhcplugin.ranni.lecture:
+    description: "Permet à Ranni d'utiliser sa capacité spéciale"
+    default: op
+
   uhcplugin.checkrole:
     description: Permet aux admins de voir le rôle d’un joueur.
     default: op

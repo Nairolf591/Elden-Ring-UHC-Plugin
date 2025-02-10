@@ -213,5 +213,8 @@ public class RoleManager implements CommandExecutor {
         playerRoles.put(player.getUniqueId(), role);
     }
 
+    public List<String> getActiveRoles() {
+        return new ArrayList<>(roleCamps.keySet()); // Retourne tous les rôles configurés
+    }
 
 }

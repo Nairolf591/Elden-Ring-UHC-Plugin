@@ -4,9 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class ManaManager {
     private final Main plugin;
@@ -35,13 +33,30 @@ public class ManaManager {
     }
 
     // ✅ Consommer du mana
+    private final Set<UUID> manaWarningCooldown = new HashSet<>();
+
     public boolean consumeMana(Player player, int cost) {
         int currentMana = getMana(player);
         if (currentMana >= cost) {
             setMana(player, currentMana - cost);
             return true;
         }
-        player.sendMessage(ChatColor.RED + "❌ Pas assez de mana !");
+
+        // ✅ Vérifie si le joueur est déjà en cooldown pour éviter le double message
+        if (manaWarningCooldown.contains(player.getUniqueId())) {
+            return false;
+        }
+
+        manaWarningCooldown.add(player.getUniqueId());
+
+        // ✅ Attente d'une seconde avant d'afficher le message si le joueur n'a toujours pas de mana
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (getMana(player) < cost) {
+                player.sendMessage(ChatColor.RED + "❌ Pas assez de mana !");
+            }
+            manaWarningCooldown.remove(player.getUniqueId()); // ✅ Retire le cooldown après l'affichage
+        }, 20L); // 1 seconde d'attente
+
         return false;
     }
 

@@ -1,6 +1,9 @@
 package me.uhcplugin.roles;
 
 import org.bukkit.*;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -16,7 +19,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
-public class RanniRole implements Listener {
+public class RanniRole implements Listener, CommandExecutor {
     private final Main plugin;
     private final HashMap<UUID, UUID> partners = new HashMap<>();
     private final Set<UUID> sentWarningRecently = new HashSet<>();
@@ -28,6 +31,68 @@ public class RanniRole implements Listener {
     }
 
     private final Map<UUID, ItemStack[]> savedInventories = new HashMap<>(); // Sauvegarde des inventaires
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(ChatColor.RED + "❌ Seuls les joueurs peuvent exécuter cette commande !");
+            return true;
+        }
+
+        Player player = (Player) sender;
+
+        // ✅ Vérifie que le joueur est bien Ranni
+        String role = plugin.getRoleManager().getRole(player);
+        if (!role.equalsIgnoreCase("Ranni")) {
+            player.sendMessage(ChatColor.RED + "❌ Seule Ranni peut utiliser cette commande !");
+            return true;
+        }
+
+        // ✅ Vérifie qu’un joueur a été spécifié en argument
+        if (args.length != 1) {
+            player.sendMessage(ChatColor.RED + "❌ Utilisation : /lecture <joueur>");
+            return true;
+        }
+
+        Player target = Bukkit.getPlayer(args[0]);
+
+        // ✅ Vérifie que le joueur cible est bien en ligne et dans la partie
+        if (target == null || !target.isOnline()) {
+            player.sendMessage(ChatColor.RED + "❌ Le joueur " + args[0] + " n’est pas en ligne !");
+            return true;
+        }
+
+        // ✅ Vérifie que la cible a bien un rôle attribué
+        String realRole = plugin.getRoleManager().getRole(target);
+        if (realRole == null) {
+            player.sendMessage(ChatColor.RED + "❌ Impossible d’analyser ce joueur !");
+            return true;
+        }
+
+        // ✅ Sélectionne un rôle aléatoire qui n’est pas "Ranni"
+        List<String> activeRoles = new ArrayList<>(plugin.getRoleManager().getPlayerRoles().values());
+        activeRoles.remove("Ranni"); // Exclut Ranni de la sélection
+
+        if (activeRoles.isEmpty()) {
+            player.sendMessage(ChatColor.RED + "❌ Aucun rôle supplémentaire disponible !");
+            return true;
+        }
+
+        Collections.shuffle(activeRoles);
+        String fakeRole = activeRoles.get(0); // Premier rôle aléatoire de la liste
+
+        // ✅ Mélange l'affichage des rôles pour ne pas indiquer le vrai rôle
+        List<String> displayedRoles = Arrays.asList(realRole, fakeRole);
+        Collections.shuffle(displayedRoles);
+
+        // ✅ Envoie le résultat à Ranni
+        player.sendMessage(ChatColor.AQUA + "🔮 Lecture Astrale...");
+        player.sendMessage(ChatColor.LIGHT_PURPLE + "✨ Le joueur " + ChatColor.WHITE + target.getName() + ChatColor.LIGHT_PURPLE + " est l’un des rôles suivants :");
+        player.sendMessage(ChatColor.YELLOW + "🎭 " + displayedRoles.get(0));
+        player.sendMessage(ChatColor.YELLOW + "🎭 " + displayedRoles.get(1));
+
+        return true;
+    }
 
     @EventHandler
     public void onPlayerKill(PlayerDeathEvent event) {
@@ -70,7 +135,6 @@ public class RanniRole implements Listener {
         }
     }
 
-
     public boolean hasPartner(Player ranni) {
         return partners.containsKey(ranni.getUniqueId());
     }
@@ -99,13 +163,14 @@ public class RanniRole implements Listener {
         }
     }
 
+    private final Set<UUID> manaBuffer = new HashSet<>();
+
     @EventHandler
     public void onArtifactUse(PlayerInteractEvent event) {
+        if (event.getHand() != org.bukkit.inventory.EquipmentSlot.HAND) return; // ✅ Évite les appels de la main secondaire
         Player player = event.getPlayer();
 
         // ✅ Vérifie que l'event vient bien d'un clic droit et de la main principale
-        if (event.getHand() != org.bukkit.inventory.EquipmentSlot.HAND)
-            return; // Évite les appels de la main secondaire
         if (!event.getAction().toString().contains("RIGHT_CLICK")) return; // Ignore les clics gauches
 
         // ✅ Vérifie que l'objet est bien la Nether Star de Ranni
@@ -130,17 +195,22 @@ public class RanniRole implements Listener {
             return;
         }
 
-        // ✅ Vérifie le mana et met à jour le scoreboard immédiatement après consommation
-        if (!plugin.getManaManager().consumeMana(player, 100)) {
-            player.sendMessage(ChatColor.RED + "❌ Tu n’as pas assez de mana pour activer l’éclipse lunaire !");
-            return;
-        }
-        plugin.getManaManager().updateManaDisplay(player); // ✅ Met à jour le scoreboard !
+        // ✅ Ajoute temporairement le joueur au buffer pour éviter le message "Pas assez de mana" juste après
+        manaBuffer.add(player.getUniqueId());
+        Bukkit.getScheduler().runTaskLater(plugin, () -> manaBuffer.remove(player.getUniqueId()), 20L); // 1s d'attente
 
-        // ✅ Annule l’event pour éviter plusieurs activations
+        // ✅ Annule immédiatement l'event pour éviter les doubles appels
         event.setCancelled(true);
 
-        // ✅ Lance la création de la zone
+        // ✅ Vérifie d'abord le mana AVANT d'aller plus loin
+        if (!plugin.getManaManager().consumeMana(player, 100)) {
+            return;
+        }
+
+        // ✅ Met à jour le scoreboard APRES avoir confirmé l'utilisation du mana
+        plugin.getManaManager().updateManaDisplay(player);
+
+        // ✅ Ensuite, on active la capacité
         createLunarZone(player);
     }
 
@@ -246,5 +316,9 @@ public class RanniRole implements Listener {
                 }
             }
         }, 0L, 100L); // ✅ Vérifie toutes les **5 secondes** (100 ticks)
+    }
+
+    public boolean isInManaBuffer(Player player) {
+        return manaBuffer.contains(player.getUniqueId());
     }
 }
