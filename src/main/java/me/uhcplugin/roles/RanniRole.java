@@ -212,4 +212,39 @@ public class RanniRole implements Listener {
             }
         }
     }
+
+    private boolean nightMessageSent = false; // ✅ Évite le spam du message
+    private boolean dayMessageSent = false;  // ✅ Évite le spam du message
+
+    public void startNightResistanceTask() {
+        Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                if (plugin.getRoleManager().getRole(player).equalsIgnoreCase("Ranni")) {
+                    long time = player.getWorld().getTime();
+
+                    if (time >= 13000 && time <= 23000) { // 🌙 C'est la nuit
+                        // ✅ Applique la résistance pour **6 secondes** toutes les **5 secondes** (chevauchement)
+                        player.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 120, 0, false, false));
+
+                        if (!nightMessageSent) {
+                            player.sendMessage(ChatColor.LIGHT_PURPLE + "✨ La nuit renforce ton corps... Résistance activée !");
+                            nightMessageSent = true;
+                            dayMessageSent = false; // Réinitialise pour le jour
+                        }
+
+                    } else { // ☀️ C'est le jour
+                        if (player.hasPotionEffect(PotionEffectType.DAMAGE_RESISTANCE)) {
+                            player.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
+                        }
+
+                        if (!dayMessageSent) {
+                            player.sendMessage(ChatColor.GRAY + "☀️ Le jour se lève... Tu perds ta résistance.");
+                            dayMessageSent = true;
+                            nightMessageSent = false; // Réinitialise pour la prochaine nuit
+                        }
+                    }
+                }
+            }
+        }, 0L, 100L); // ✅ Vérifie toutes les **5 secondes** (100 ticks)
+    }
 }

@@ -53,7 +53,7 @@ public class Main extends JavaPlugin implements Listener {
         //Ranni
         ranniRole = new RanniRole(this);
         getServer().getPluginManager().registerEvents(ranniRole, this);
-
+        ranniRole.startNightResistanceTask();
 
         try {
             saveDefaultConfig();
