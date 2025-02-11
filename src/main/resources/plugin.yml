@@ -49,3 +49,26 @@ commands:
   role:
     description: "Affiche ton rôle, ton camp et ta capacité"
     usage: "/role"
+
+  checkrole:
+    description: Permet aux admins de voir le rôle d’un joueur.
+    usage: /checkrole <joueur>
+    permission: uhcplugin.checkrole
+
+  lecture:
+    description: "Permet à Ranni d'analyser le rôle d'un joueur"
+    usage: "/lecture <joueur>"
+
+  soin:
+    description: "Mélina soigne un joueur."
+    usage: "/soin <joueur>"
+
+  vision:
+    description: "Mélina peut voir le camp d’un joueur."
+    usage: "/vision <joueur>"
+
+permissions:
+
+  uhcplugin.checkrole:
+    description: Permet aux admins de voir le rôle d’un joueur.
+    default: true
