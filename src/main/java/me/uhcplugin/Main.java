@@ -49,6 +49,11 @@ public class Main extends JavaPlugin implements Listener {
     public void onEnable() {
         instance = this;
         Bukkit.getLogger().info("[UHCPlugin] Le plugin est en cours d'activation...");
+        // ✅ Charge la configuration et force la mise à jour si nécessaire
+        saveDefaultConfig(); // Crée `config.yml` si elle n'existe pas
+        reloadConfig(); // Recharge la configuration au démarrage
+        Bukkit.getLogger().info("[UHCPlugin] Configuration chargée avec succès !");
+
         this.getCommand("confirmstuff").setExecutor(new ConfirmStuffCommand(this));
         getCommand("checkrole").setExecutor(new RoleManager(this));
         manaManager = new ManaManager(this);
@@ -565,7 +570,7 @@ public class Main extends JavaPlugin implements Listener {
     }
 
     public void openConfigMenu(Player player) {
-        Inventory configMenu = Bukkit.createInventory(null, 9, ChatColor.YELLOW + "Configuration UHC");
+        Inventory configMenu = Bukkit.createInventory(null, 27, ChatColor.YELLOW + "Configuration UHC");
 
         int currentPvpTime = getConfig().getInt("pvp-timer", 10);
         int currentRoleTime = getConfig().getInt("role-announcement-delay", 10);
@@ -583,7 +588,7 @@ public class Main extends JavaPlugin implements Listener {
         configMenu.setItem(2, roleTimer);
         configMenu.setItem(3, stuffManager);
         configMenu.setItem(4, roleManager);
-        configMenu.setItem(8, backButton);
+        configMenu.setItem(26, backButton);
 
         player.openInventory(configMenu);
     }

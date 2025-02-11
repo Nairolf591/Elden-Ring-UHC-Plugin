@@ -55,6 +55,8 @@ public class RoleManager implements CommandExecutor {
         roleCamps.put("Morgott", Camp.DEMI_DIEUX);
         roleCamps.put("Margit", Camp.DEMI_DIEUX);
         roleCamps.put("D_témoin_de_la_mort", Camp.TABLE_RONDE);
+        roleCamps.put("Maliketh", Camp.DEMI_DIEUX);
+        roleCamps.put("Mask d'or", Camp.TABLE_RONDE);
 
         // Ajouter les descriptions de rôle
         roleDescriptions.put("Radahn", "Tu es le puissant général Radahn, l'un des plus forts Demi-Dieux...");
@@ -65,6 +67,8 @@ public class RoleManager implements CommandExecutor {
         roleDescriptions.put("Morgott", "Tu es Morgott, le roi des réprouvés, gardien du trône...");
         roleDescriptions.put("Margit", "Tu es Margit, le gardien du Château de Voilorage, impitoyable envers les intrus...");
         roleDescriptions.put("D_témoin_de_la_mort", "Tu es D, un chasseur de morts aux motivations mystérieuses...");
+        roleDescriptions.put("Maliketh", "Tu es Maliketh...");
+        roleDescriptions.put("Mask d'or", "Tu es Mask d'or...");
     }
 
     public void assignRoles() {
