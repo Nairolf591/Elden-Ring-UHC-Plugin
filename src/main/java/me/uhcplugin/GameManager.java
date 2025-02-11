@@ -70,4 +70,21 @@ public class GameManager {
     public static boolean isEnded() {
         return currentState == GameState.ENDED;
     }
+
+    // ✅ Fonction pour reset le jeu si nécessaire
+    private void resetGame() {
+        Bukkit.broadcastMessage(ChatColor.GRAY + "🔄 Réinitialisation du serveur...");
+
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            player.getInventory().clear();
+            player.setGameMode(org.bukkit.GameMode.ADVENTURE);
+        }
+
+        // 📌 Optionnel : Remettre la bordure de map à sa taille initiale
+        Bukkit.getWorld("uhc").getWorldBorder().setSize(500);
+
+        // 📌 Remettre l'état du jeu en attente
+        setGameState(GameState.WAITING);
+    }
+
 }
