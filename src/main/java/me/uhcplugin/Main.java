@@ -1,5 +1,6 @@
 package me.uhcplugin;
 
+import me.uhcplugin.roles.MelinaRole;
 import me.uhcplugin.roles.RanniRole;
 import org.bukkit.*;
 import org.bukkit.command.Command;
@@ -41,6 +42,8 @@ public class Main extends JavaPlugin implements Listener {
     private RoleManager roleManager;
     private ManaManager manaManager;
     private RanniRole ranniRole;
+    private MelinaRole melinaRole;
+
 
     @Override
     public void onEnable() {
@@ -55,6 +58,12 @@ public class Main extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(ranniRole, this);
         ranniRole.startNightResistanceTask();
         getCommand("lecture").setExecutor(ranniRole);
+
+        //Melina
+        melinaRole = new MelinaRole(this);
+        getServer().getPluginManager().registerEvents(melinaRole, this);
+        getCommand("soin").setExecutor(melinaRole);
+        getCommand("vision").setExecutor(melinaRole);
 
         try {
             saveDefaultConfig();
@@ -130,6 +139,10 @@ public class Main extends JavaPlugin implements Listener {
 
     public RanniRole getRanniRole() {
         return ranniRole;
+    }
+
+    public MelinaRole getMelinaRole() {
+        return melinaRole;
     }
 
     public ManaManager getManaManager() {

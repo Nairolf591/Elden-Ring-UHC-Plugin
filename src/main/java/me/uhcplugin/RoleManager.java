@@ -1,5 +1,6 @@
 package me.uhcplugin;
 
+import me.uhcplugin.roles.MelinaRole;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -15,6 +16,7 @@ public class RoleManager implements CommandExecutor {
     private final Map<String, Camp> roleCamps;
     private final Map<String, String> roleDescriptions;
     private static Map<UUID, String> playerRoles = new HashMap<>();
+
 
     public RoleManager(Main plugin) {
         this.plugin = plugin;
@@ -46,7 +48,7 @@ public class RoleManager implements CommandExecutor {
 
         // Associer chaque rôle à son camp
         roleCamps.put("Radahn", Camp.DEMI_DIEUX);
-        roleCamps.put("Melina", Camp.SOLITAIRES);
+        roleCamps.put("Melina", Camp.TABLE_RONDE);
         roleCamps.put("Sans-éclat", Camp.SOLITAIRES);
         roleCamps.put("Ranni", Camp.SOLITAIRES);
         roleCamps.put("Godrick", Camp.DEMI_DIEUX);
@@ -97,6 +99,10 @@ public class RoleManager implements CommandExecutor {
             // ✅ Si c'est Ranni, on lui donne son artefact unique
             if (role.equalsIgnoreCase("Ranni")) {
                 plugin.getRanniRole().giveArtifactToRanni(player);
+            }
+
+            if (role.equalsIgnoreCase("Melina")) {
+                plugin.getMelinaRole().giveArtifactToMelina(player);
             }
         }
 
