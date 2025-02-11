@@ -1,5 +1,7 @@
 package me.uhcplugin;
 
+import me.uhcplugin.roles.MelinaRole;
+import me.uhcplugin.roles.RanniRole;
 import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -38,24 +40,39 @@ public class Main extends JavaPlugin implements Listener {
     private final Map<UUID, ItemStack[]> originalArmor = new HashMap<>();
     private UHCManager uhcManager;
     private RoleManager roleManager;
+    private ManaManager manaManager;
+    private RanniRole ranniRole;
+    private MelinaRole melinaRole;
+
 
     @Override
     public void onEnable() {
         instance = this;
         Bukkit.getLogger().info("[UHCPlugin] Le plugin est en cours d'activation...");
+        // ✅ Charge la configuration et force la mise à jour si nécessaire
+        saveDefaultConfig(); // Crée `config.yml` si elle n'existe pas
+        reloadConfig(); // Recharge la configuration au démarrage
+        Bukkit.getLogger().info("[UHCPlugin] Configuration chargée avec succès !");
+
         this.getCommand("confirmstuff").setExecutor(new ConfirmStuffCommand(this));
+        getCommand("checkrole").setExecutor(new RoleManager(this));
+        manaManager = new ManaManager(this);
+
+        // Ranni
+        ranniRole = new RanniRole(this);
+        getServer().getPluginManager().registerEvents(ranniRole, this);
+        ranniRole.startNightResistanceTask();
+        getCommand("lecture").setExecutor(ranniRole);
+
+        //Melina
+        melinaRole = new MelinaRole(this);
+        getServer().getPluginManager().registerEvents(melinaRole, this);
+        getCommand("soin").setExecutor(melinaRole);
+        getCommand("vision").setExecutor(melinaRole);
 
         try {
             saveDefaultConfig();
-            Bukkit.getLogger().info("[DEBUG] 📌 savedRoles existe ? " + getConfig().contains("savedRoles"));
-            Bukkit.getLogger().info("[DEBUG] Contenu du fichier config.yml :");
             Bukkit.getLogger().info(getConfig().saveToString());
-            if (getConfig().contains("savedRoles")) {
-                Bukkit.getLogger().info("[DEBUG] 📌 savedRoles existe dans la config !");
-            } else {
-                Bukkit.getLogger().warning("[DEBUG] ❌ savedRoles est manquant !");
-            }
-
             // 🔄 Restaure les rôles depuis la config
             if (getConfig().contains("savedRoles")) {
                 ConfigurationSection section = getConfig().getConfigurationSection("savedRoles");
@@ -123,6 +140,18 @@ public class Main extends JavaPlugin implements Listener {
 
     public RoleManager getRoleManager() {
         return roleManager;
+    }
+
+    public RanniRole getRanniRole() {
+        return ranniRole;
+    }
+
+    public MelinaRole getMelinaRole() {
+        return melinaRole;
+    }
+
+    public ManaManager getManaManager() {
+        return manaManager;
     }
 
     public Location getRandomSpawnLocation(World world, Location center, double borderSize) {
@@ -541,7 +570,7 @@ public class Main extends JavaPlugin implements Listener {
     }
 
     public void openConfigMenu(Player player) {
-        Inventory configMenu = Bukkit.createInventory(null, 9, ChatColor.YELLOW + "Configuration UHC");
+        Inventory configMenu = Bukkit.createInventory(null, 27, ChatColor.YELLOW + "Configuration UHC");
 
         int currentPvpTime = getConfig().getInt("pvp-timer", 10);
         int currentRoleTime = getConfig().getInt("role-announcement-delay", 10);
@@ -559,7 +588,7 @@ public class Main extends JavaPlugin implements Listener {
         configMenu.setItem(2, roleTimer);
         configMenu.setItem(3, stuffManager);
         configMenu.setItem(4, roleManager);
-        configMenu.setItem(8, backButton);
+        configMenu.setItem(26, backButton);
 
         player.openInventory(configMenu);
     }
