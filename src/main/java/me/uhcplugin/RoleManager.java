@@ -1,6 +1,8 @@
 package me.uhcplugin;
 
+import me.uhcplugin.roles.MelinaRole;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -14,6 +16,7 @@ public class RoleManager implements CommandExecutor {
     private final Map<String, Camp> roleCamps;
     private final Map<String, String> roleDescriptions;
     private static Map<UUID, String> playerRoles = new HashMap<>();
+
 
     public RoleManager(Main plugin) {
         this.plugin = plugin;
@@ -45,13 +48,15 @@ public class RoleManager implements CommandExecutor {
 
         // Associer chaque rôle à son camp
         roleCamps.put("Radahn", Camp.DEMI_DIEUX);
-        roleCamps.put("Melina", Camp.SOLITAIRES);
+        roleCamps.put("Melina", Camp.TABLE_RONDE);
         roleCamps.put("Sans-éclat", Camp.SOLITAIRES);
-        roleCamps.put("Ranni", Camp.DEMI_DIEUX);
+        roleCamps.put("Ranni", Camp.SOLITAIRES);
         roleCamps.put("Godrick", Camp.DEMI_DIEUX);
         roleCamps.put("Morgott", Camp.DEMI_DIEUX);
         roleCamps.put("Margit", Camp.DEMI_DIEUX);
-        roleCamps.put("D_témoin_de_la_mort", Camp.FLEAUX);
+        roleCamps.put("D_témoin_de_la_mort", Camp.TABLE_RONDE);
+        roleCamps.put("Maliketh", Camp.DEMI_DIEUX);
+        roleCamps.put("Mask d'or", Camp.TABLE_RONDE);
 
         // Ajouter les descriptions de rôle
         roleDescriptions.put("Radahn", "Tu es le puissant général Radahn, l'un des plus forts Demi-Dieux...");
@@ -62,13 +67,13 @@ public class RoleManager implements CommandExecutor {
         roleDescriptions.put("Morgott", "Tu es Morgott, le roi des réprouvés, gardien du trône...");
         roleDescriptions.put("Margit", "Tu es Margit, le gardien du Château de Voilorage, impitoyable envers les intrus...");
         roleDescriptions.put("D_témoin_de_la_mort", "Tu es D, un chasseur de morts aux motivations mystérieuses...");
+        roleDescriptions.put("Maliketh", "Tu es Maliketh...");
+        roleDescriptions.put("Mask d'or", "Tu es Mask d'or...");
     }
 
     public void assignRoles() {
         List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
         List<String> availableRoles = new ArrayList<>();
-
-        Bukkit.getLogger().info("[DEBUG] Liste des rôles et leur camp : " + roleCamps);
 
         for (String role : roleCamps.keySet()) {
             if (plugin.getConfig().getBoolean("roles." + role, false)) {
@@ -85,7 +90,6 @@ public class RoleManager implements CommandExecutor {
             String role = availableRoles.get(i);
 
             boolean isEnabled = plugin.getConfig().getBoolean("roles." + role, false);
-            Bukkit.getLogger().info("[DEBUG] Rôles disponibles après filtrage : " + availableRoles);
 
             if (!isEnabled) {
                 continue;
@@ -93,7 +97,17 @@ public class RoleManager implements CommandExecutor {
 
             playerRoles.put(player.getUniqueId(), role);
             player.sendMessage("§6[UHC] §aTu es " + role + " ! Camp : " + roleCamps.get(role).getDisplayName());
-            Bukkit.getLogger().info("[DEBUG] " + player.getName() + " reçoit le rôle " + role);
+            plugin.getManaManager().assignManaBasedOnRole(player); // ✅ Ajout du mana selon le rôle
+            plugin.getScoreboardManager().setPlayerScoreboard(player);
+
+            // ✅ Si c'est Ranni, on lui donne son artefact unique
+            if (role.equalsIgnoreCase("Ranni")) {
+                plugin.getRanniRole().giveArtifactToRanni(player);
+            }
+
+            if (role.equalsIgnoreCase("Melina")) {
+                plugin.getMelinaRole().giveArtifactToMelina(player);
+            }
         }
 
         // ✅ CORRECTION : Sauvegarde proprement les rôles en convertissant UUID en String
@@ -104,8 +118,6 @@ public class RoleManager implements CommandExecutor {
 
         plugin.getConfig().set("savedRoles", savedRolesMap);
         plugin.saveConfig();
-
-        Bukkit.getLogger().info("[DEBUG] ✅ Les rôles ont été sauvegardés dans la config.");
     }
 
     public String getRole(Player player) {
@@ -116,7 +128,6 @@ public class RoleManager implements CommandExecutor {
             // Vérifie si on peut récupérer le rôle depuis la config
             role = plugin.getConfig().getString("savedRoles." + player.getUniqueId().toString());
             if (role != null) {
-                Bukkit.getLogger().info("[DEBUG] Rôle restauré pour " + player.getName() + " : " + role);
                 playerRoles.put(player.getUniqueId(), role); // Restaure en mémoire
             } else {
                 Bukkit.getLogger().warning("[DEBUG] Impossible de restaurer le rôle pour " + player.getName());
@@ -147,6 +158,41 @@ public class RoleManager implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (command.getName().equalsIgnoreCase("checkrole")) {
+            if (!sender.hasPermission("uhcplugin.checkrole")) {
+                sender.sendMessage(ChatColor.RED + "❌ Tu n'as pas la permission d'utiliser cette commande !");
+                return true;
+            }
+
+            if (args.length == 0) {
+                sender.sendMessage(ChatColor.RED + "❌ Utilisation : /checkrole <joueur>");
+                return true;
+            }
+
+            Player target = Bukkit.getPlayer(args[0]);
+            if (target == null || !target.isOnline()) {
+                sender.sendMessage(ChatColor.RED + "❌ Le joueur " + args[0] + " n'est pas en ligne !");
+                return true;
+            }
+
+            // Récupération du rôle et du camp du joueur ciblé
+            String role = getRole(target);
+            Camp camp = getCamp(target);
+
+            if (role == null || camp == null) {
+                sender.sendMessage(ChatColor.RED + "❌ Le joueur " + target.getName() + " n'a pas encore de rôle !");
+                return true;
+            }
+
+            // 📌 Affichage des informations du joueur
+            sender.sendMessage(ChatColor.GOLD + "📌 Informations sur " + ChatColor.WHITE + target.getName() + " :");
+            sender.sendMessage(ChatColor.YELLOW + "🎭 Rôle : " + ChatColor.WHITE + role);
+            sender.sendMessage(ChatColor.GOLD + "🏹 Camp : " + ChatColor.WHITE + camp.getDisplayName());
+
+            return true; // ✅ Fin de la commande checkrole
+        }
+
+        // 📌 Gestion de la commande /role (exécutée uniquement par les joueurs)
         if (!(sender instanceof Player)) {
             sender.sendMessage("§cSeuls les joueurs peuvent exécuter cette commande !");
             return true;
@@ -155,22 +201,30 @@ public class RoleManager implements CommandExecutor {
         Player player = (Player) sender;
         String role = getRole(player);
         Camp camp = getCamp(player);
+
         if (camp == null) {
-            Bukkit.getLogger().warning("[DEBUG] Le joueur " + player.getName() + " n'a pas de camp !");
             player.sendMessage("§6[UHC] §cErreur : Ton rôle ne semble pas avoir de camp associé !");
             return true;
         }
-        String description = getRoleDescription(role);
 
+        String description = getRoleDescription(role);
         player.sendMessage("§6[UHC] §aTu es " + role + " !");
         player.sendMessage("§6[UHC] §aTu fais partie du camp " + camp.getDisplayName() + " !");
         player.sendMessage("§6[UHC] §e" + description);
 
-        return true;
+        return true; // ✅ Fin de la commande /role
     }
 
     public static Map<UUID, String> getPlayerRoles() {
         return playerRoles;
+    }
+
+    public void setRole(Player player, String role) {
+        playerRoles.put(player.getUniqueId(), role);
+    }
+
+    public List<String> getActiveRoles() {
+        return new ArrayList<>(roleCamps.keySet()); // Retourne tous les rôles configurés
     }
 
 }
