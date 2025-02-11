@@ -45,13 +45,21 @@ public class ScoreboardManager {
         objective.setDisplaySlot(DisplaySlot.SIDEBAR);
 
         // 🔹 Nombre de joueurs
-        objective.getScore(ChatColor.AQUA + "👥 Joueurs : " + ChatColor.WHITE + Bukkit.getOnlinePlayers().size()).setScore(6);
+        objective.getScore(ChatColor.AQUA + "👥 Joueurs : " + ChatColor.WHITE + Bukkit.getOnlinePlayers().size()).setScore(8);
 
         // 🔹 État de la partie
-        objective.getScore(ChatColor.RED + "⚔ État : " + ChatColor.WHITE + GameManager.getGameState()).setScore(5);
+        objective.getScore(ChatColor.RED + "⚔ État : " + ChatColor.WHITE + GameManager.getGameState()).setScore(7);
 
         // 🔹 Host
-        objective.getScore(ChatColor.LIGHT_PURPLE + "👑 Host : " + ChatColor.WHITE + "Flobill").setScore(4);
+        objective.getScore(ChatColor.LIGHT_PURPLE + "👑 Host : " + ChatColor.WHITE + "Flobill").setScore(6);
+
+        if (GameManager.getGameState() == GameManager.GameState.PLAYING) {
+            // 🔹 Afficher le mana
+            int mana = plugin.getManaManager().getMana(player);
+            int maxMana = plugin.getManaManager().getMaxMana(player); // 🔹 Récupère le mana max du joueur
+            objective.getScore(ChatColor.BLUE + "✦ Mana :").setScore(5);
+            objective.getScore(ChatColor.WHITE.toString() + mana + " / " + maxMana).setScore(4); // ✅ Affiche le maxMana correct
+        }
 
         if (GameManager.getGameState() == GameManager.GameState.STARTING) {
             // 🔹 Timer d'attribution des rôles
@@ -61,102 +69,31 @@ public class ScoreboardManager {
             // 🔹 Rôle du joueur
             String role = plugin.getRoleManager().getRole(player);
             role = (role != null) ? role : ChatColor.GRAY + "Aucun rôle";
-            objective.getScore(ChatColor.YELLOW + "🎭 Ton rôle : " + ChatColor.WHITE + role).setScore(3);
+            objective.getScore(ChatColor.YELLOW + "🎭 Ton rôle :").setScore(3);
+            objective.getScore(ChatColor.WHITE + role).setScore(2);
 
             // 🔹 Camp du joueur
             Camp camp = plugin.getRoleManager().getCamp(player);
             String campName = (camp != null) ? camp.getDisplayName() : ChatColor.GRAY + "Aucun camp";
 
-            // 🚀 Correction pour assurer que chaque joueur voit son propre camp
-            Bukkit.getLogger().info("[DEBUG] Scoreboard - Mise à jour du camp pour " + player.getName() + " -> " + campName);
-            objective.getScore(ChatColor.GOLD + "🏹 Camp : " + ChatColor.WHITE + campName).setScore(2);
+            // 🏹 Affichage du camp (sur deux lignes)
+            objective.getScore(ChatColor.GOLD + "🏹 Camp :").setScore(1);
+            objective.getScore(ChatColor.WHITE + campName).setScore(0);
         }
 
         // 🔹 Rôles activés
         List<String> activeRoles = getActiveRoles();
         if (!activeRoles.isEmpty()) {
-            objective.getScore(ChatColor.GOLD + "🎭 Rôles activés :").setScore(1);
-            int score = 0;
-            for (String role : activeRoles) {
-                objective.getScore(ChatColor.WHITE + "• " + role).setScore(-score);
-                score++;
+            objective.getScore(ChatColor.GOLD + "🎭 Rôles activés :").setScore(-1);
+            int roleScore = -2; // Commence en négatif pour ne pas chevaucher les autres lignes
+            for (String activeRole : activeRoles) {
+                objective.getScore(ChatColor.WHITE + "• " + activeRole).setScore(roleScore);
+                roleScore--;
             }
         }
 
         // ✅ Applique le scoreboard unique au joueur
         player.setScoreboard(scoreboard);
-    }
-
-    // 🔄 Met à jour les scores dynamiques (joueurs, état du jeu, rôles activés)
-    public void updateScoreboard(Player player) {
-        if (objective == null) return;
-
-        // 🔹 Réinitialise les anciens scores
-        scoreboard.getEntries().forEach(scoreboard::resetScores);
-
-        // 📌 Nombre de joueurs
-        objective.getScore(ChatColor.AQUA + "👥 Joueurs : " + ChatColor.WHITE + Bukkit.getOnlinePlayers().size()).setScore(6);
-
-        // 📌 État de la partie
-        objective.getScore(ChatColor.RED + "⚔ État : " + ChatColor.WHITE + GameManager.getGameState()).setScore(5);
-
-        // 📌 Host (fixé à Flobill pour l'instant)
-        objective.getScore(ChatColor.LIGHT_PURPLE + "👑 Host : " + ChatColor.WHITE + "Flobill").setScore(4);
-
-        // 🔄 Gestion de l'affichage en fonction de l'état du jeu
-        if (GameManager.getGameState() == GameManager.GameState.STARTING) {
-            // 📌 Affichage du timer d'attribution des rôles
-            int timeLeft = plugin.getConfig().getInt("role-announcement-delay", 15);
-            setRoleTimer(timeLeft);
-        } else if (GameManager.getGameState() == GameManager.GameState.PLAYING) {
-
-            // 🔹 Récupération du rôle du joueur
-            String role = plugin.getRoleManager().getRole(player);
-            role = (role != null) ? role : ChatColor.GRAY + "Aucun rôle";
-            objective.getScore(ChatColor.YELLOW + "🎭 Ton rôle : " + ChatColor.WHITE + role).setScore(3);
-
-            // 🔹 Récupération du camp du joueur (🔄 Nouvelle correction)
-            Camp camp = plugin.getRoleManager().getCamp(player);
-            String campName = (camp != null) ? camp.getDisplayName() : ChatColor.GRAY + "Aucun camp";
-
-            // 🚀 Correction pour forcer la mise à jour du scoreboard après attribution des rôles
-            Bukkit.getLogger().info("[DEBUG] Scoreboard - Mise à jour du camp pour " + player.getName() + " -> " + campName);
-            objective.getScore(ChatColor.GOLD + "🏹 Camp : " + ChatColor.WHITE + campName).setScore(2);
-        }
-
-        // 📌 Rôles activés
-        List<String> activeRoles = getActiveRoles();
-        if (!activeRoles.isEmpty()) {
-            objective.getScore(ChatColor.GOLD + "🎭 Rôles activés :").setScore(1);
-            int score = 0;
-            for (String role : activeRoles) {
-                objective.getScore(ChatColor.WHITE + "• " + role).setScore(-score);
-                score++;
-            }
-        }
-    }
-
-    // 🔄 Met à jour le timer d'attribution des rôles
-    public void setRoleTimer(int secondsLeft) {
-        if (objective == null) return;
-
-        // 🔄 Supprime uniquement l'ancien timer pour éviter l'empilement
-        scoreboard.resetScores(lastTimerValue);
-
-        // 📌 Réaffichage des infos principales pour éviter qu'elles disparaissent
-        objective.getScore(ChatColor.AQUA + "👥 Joueurs : " + ChatColor.WHITE + Bukkit.getOnlinePlayers().size()).setScore(6);
-        objective.getScore(ChatColor.RED + "⚔ État : " + ChatColor.WHITE + GameManager.getGameState()).setScore(5);
-        objective.getScore(ChatColor.LIGHT_PURPLE + "👑 Host : " + ChatColor.WHITE + "Flobill").setScore(4);
-
-        // Supprime l'ancienne ligne de timer pour éviter les doublons
-        if (!lastTimerValue.isEmpty()) {
-            scoreboard.resetScores(lastTimerValue);
-        }
-
-// 📌 Stocke et affiche **le timer sur UNE SEULE LIGNE**
-        lastTimerValue = ChatColor.LIGHT_PURPLE + "🎭 Attribution des rôles dans " + ChatColor.WHITE + secondsLeft + "s";
-        objective.getScore(lastTimerValue).setScore(3);
-
     }
 
     // 🔍 Récupère les rôles activés depuis la config
@@ -172,11 +109,6 @@ public class ScoreboardManager {
         for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
             setPlayerScoreboard(onlinePlayer);
         }
-    }
-
-    // 📌 Fonction pour récupérer la dernière valeur stockée du timer
-    private String getLastTimerValue() {
-        return lastTimerValue;
     }
 
     public void updateRoleTimer(int secondsLeft) {
