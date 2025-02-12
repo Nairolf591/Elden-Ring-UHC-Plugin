@@ -55,7 +55,7 @@ public class MalikethRole implements Listener, CommandExecutor {
     public void handlePhaseChange(Player player) {
         // Vérifie si le joueur est bien Maliketh
         if (!"Maliketh".equalsIgnoreCase(plugin.getRoleManager().getRole(player))) {
-            player.sendMessage(ChatColor.RED + "❌ Tu n'es pas Maliketh !");
+            player.sendMessage(ChatColor.RED + "❌ Tu n'es pas Maliketh ! ");
             return;
         }
 
