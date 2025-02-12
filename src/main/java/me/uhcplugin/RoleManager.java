@@ -100,6 +100,10 @@ public class RoleManager implements CommandExecutor {
             plugin.getManaManager().assignManaBasedOnRole(player); // ✅ Ajout du mana selon le rôle
             plugin.getScoreboardManager().setPlayerScoreboard(player);
 
+            if (role.equalsIgnoreCase("Maliketh")) {
+                plugin.getMalikethRole().giveMalikethItems(player);
+            }
+
             // ✅ Si c'est Ranni, on lui donne son artefact unique
             if (role.equalsIgnoreCase("Ranni")) {
                 plugin.getRanniRole().giveArtifactToRanni(player);

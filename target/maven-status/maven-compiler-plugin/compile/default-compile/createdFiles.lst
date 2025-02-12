@@ -12,7 +12,9 @@ me\uhcplugin\RoleManager.class
 me\uhcplugin\Camp.class
 me\uhcplugin\CountdownTimer.class
 me\uhcplugin\CountdownTimer$1.class
+me\uhcplugin\roles\MalikethRole.class
 me\uhcplugin\UHCManager.class
+me\uhcplugin\roles\MalikethRole$1.class
 me\uhcplugin\GameManager$GameState.class
 me\uhcplugin\GameManager.class
 me\uhcplugin\RoleMenu.class
