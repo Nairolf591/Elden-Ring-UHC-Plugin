@@ -6,6 +6,7 @@ import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -30,13 +31,20 @@ public class MalikethRole implements Listener, CommandExecutor {
     public MalikethRole(Main plugin) {
         this.plugin = plugin;
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
-        plugin.getCommand("maliketh_phase").setExecutor((sender, command, label, args) -> {
-            if (sender instanceof Player) {
-                Player player = (Player) sender;
-                handlePhaseChange(player);
-            }
-            return true;
-        });
+
+        // Vérifiez si la commande existe avant de définir l'exécuteur
+        PluginCommand command = plugin.getCommand("maliketh_phase");
+        if (command != null) {
+            command.setExecutor((sender, cmd, label, args) -> {
+                if (sender instanceof Player) {
+                    Player player = (Player) sender;
+                    handlePhaseChange(player);
+                }
+                return true;
+            });
+        } else {
+            plugin.getLogger().severe("La commande 'maliketh_phase' n'est pas enregistrée dans plugin.yml !");
+        }
     }
 
     @Override
