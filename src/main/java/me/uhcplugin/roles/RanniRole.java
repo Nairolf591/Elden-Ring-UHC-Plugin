@@ -287,6 +287,10 @@ public class RanniRole implements Listener, CommandExecutor {
     private boolean dayMessageSent = false;  // ✅ Évite le spam du message
 
     public void startNightResistanceTask() {
+        if (Main.getInstance().getRoleManager() == null){
+            Bukkit.getLogger().severe("RoleManager n'est pas initialisé avant Ranni ?");
+            return;
+        }
         Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             for (Player player : Bukkit.getOnlinePlayers()) {
                 if (plugin.getRoleManager().getRole(player).equalsIgnoreCase("Ranni")) {
