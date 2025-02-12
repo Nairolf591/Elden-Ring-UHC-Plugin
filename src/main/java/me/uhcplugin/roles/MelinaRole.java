@@ -95,8 +95,21 @@ public class MelinaRole implements Listener, CommandExecutor {
             return true;
         }
 
-        // ✅ Récupère et affiche le camp du joueur ciblé
-        String camp = plugin.getRoleManager().getCamp(target).getDisplayName();
+        // ✅ Récupère le camp du joueur ciblé
+        String camp;
+        if (plugin.getRoleManager().getRole(target).equalsIgnoreCase("Maliketh")) {
+            // Vérifie si Maliketh est en Phase 1
+            MalikethRole malikethRole = plugin.getMalikethRole(); // Assurez-vous que cette méthode existe dans Main
+            if (malikethRole != null && malikethRole.isInPhase1(target.getUniqueId())) {
+                camp = "Table ronde"; // Maliketh en Phase 1 appartient à la Table Ronde
+            } else {
+                camp = plugin.getRoleManager().getCamp(target).getDisplayName(); // Sinon, camp d'origine
+            }
+        } else {
+            camp = plugin.getRoleManager().getCamp(target).getDisplayName(); // Camp d'origine pour les autres joueurs
+        }
+
+        // ✅ Affiche le camp du joueur ciblé
         melina.sendMessage(ChatColor.AQUA + "🔮 Vision des Âmes activée...");
         melina.sendMessage(ChatColor.LIGHT_PURPLE + "✨ Le joueur " + ChatColor.WHITE + target.getName() + ChatColor.LIGHT_PURPLE + " appartient au camp : " + ChatColor.GOLD + camp);
 
