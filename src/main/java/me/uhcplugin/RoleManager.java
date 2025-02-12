@@ -54,7 +54,7 @@ public class RoleManager implements CommandExecutor {
         roleCamps.put("Godrick", Camp.DEMI_DIEUX);
         roleCamps.put("Morgott", Camp.DEMI_DIEUX);
         roleCamps.put("Margit", Camp.DEMI_DIEUX);
-        roleCamps.put("D_témoin_de_la_mort", Camp.TABLE_RONDE);
+        roleCamps.put("D", Camp.TABLE_RONDE);
         roleCamps.put("Maliketh", Camp.DEMI_DIEUX);
         roleCamps.put("Mask d'or", Camp.TABLE_RONDE);
 
@@ -66,8 +66,8 @@ public class RoleManager implements CommandExecutor {
         roleDescriptions.put("Godrick", "Tu es Godrick le Greffé, avide de puissance et de domination...");
         roleDescriptions.put("Morgott", "Tu es Morgott, le roi des réprouvés, gardien du trône...");
         roleDescriptions.put("Margit", "Tu es Margit, le gardien du Château de Voilorage, impitoyable envers les intrus...");
-        roleDescriptions.put("D_témoin_de_la_mort", "Tu es D, un chasseur de morts aux motivations mystérieuses...");
-        roleDescriptions.put("Maliketh", "Tu es Maliketh...");
+        roleDescriptions.put("D", "Tu es D, un chasseur de morts aux motivations mystérieuses...");
+        roleDescriptions.put("Maliketh", "Tu es Maliketh, le gardien de la Rune de la Mort. Jadis protecteur du Destin d’Or, tu portes en toi une puissance scellée, prête à se déchaîner si tu lâches prise...");
         roleDescriptions.put("Mask d'or", "Tu es Mask d'or...");
     }
 
