@@ -1,5 +1,6 @@
 package me.uhcplugin;
 
+import me.uhcplugin.roles.MalikethRole;
 import me.uhcplugin.roles.MelinaRole;
 import me.uhcplugin.roles.RanniRole;
 import org.bukkit.*;
@@ -43,6 +44,7 @@ public class Main extends JavaPlugin implements Listener {
     private ManaManager manaManager;
     private RanniRole ranniRole;
     private MelinaRole melinaRole;
+    private MalikethRole malikethRole;
 
 
     @Override
@@ -69,6 +71,11 @@ public class Main extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(melinaRole, this);
         getCommand("soin").setExecutor(melinaRole);
         getCommand("vision").setExecutor(melinaRole);
+
+        // Maliketh
+        malikethRole = new MalikethRole(this);
+        getServer().getPluginManager().registerEvents(malikethRole, this);
+        getCommand("maliketh_phase").setExecutor(malikethRole);
 
         try {
             saveDefaultConfig();
@@ -148,6 +155,10 @@ public class Main extends JavaPlugin implements Listener {
 
     public MelinaRole getMelinaRole() {
         return melinaRole;
+    }
+
+    public MalikethRole getMalikethRole() {
+        return malikethRole;
     }
 
     public ManaManager getManaManager() {
