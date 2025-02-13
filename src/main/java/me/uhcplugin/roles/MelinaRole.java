@@ -187,7 +187,7 @@ public class MelinaRole implements Listener, CommandExecutor {
         String role = plugin.getRoleManager().getRole(player);
         ItemStack item = player.getInventory().getItemInMainHand();
 
-        if (!role.equalsIgnoreCase("Melina")) return;
+        if (role == null || !role.equalsIgnoreCase("Melina")) return; // ✅ Vérifie null
         if (item.getType() != Material.NETHER_STAR || !item.hasItemMeta() ||
                 !item.getItemMeta().getDisplayName().equals(ChatColor.GOLD + "⚡ Lumière de Grâce")) {
             return;

@@ -487,7 +487,12 @@ public class Main extends JavaPlugin implements Listener {
 
             getConfig().set("border-size", currentSize);
             saveConfig();
-            Bukkit.getWorld("uhc").getWorldBorder().setSize(currentSize);
+            World uhcWorld = Bukkit.getWorld("uhc");
+            if (uhcWorld == null) {
+                player.sendMessage(ChatColor.RED + "❌ Le monde UHC n'est pas chargé !");
+                return;
+            }
+            uhcWorld.getWorldBorder().setSize(currentSize); // ✅ Sécurisé
 
             player.sendMessage(ChatColor.GREEN + "🌍 Taille de la bordure mise à jour : " + currentSize + " blocs !");
             openConfigMenu(player);
