@@ -67,6 +67,10 @@ commands:
     description: "Mélina peut voir le camp d’un joueur."
     usage: "/vision <joueur>"
 
+  maliketh_phase:
+    description: "Permet à Maliketh de changer de phase."
+    usage: "/maliketh_phase"
+
 permissions:
 
   uhcplugin.checkrole:
