@@ -108,6 +108,12 @@ public class RoleManager implements CommandExecutor {
             if (role.equalsIgnoreCase("Melina")) {
                 plugin.getMelinaRole().giveArtifactToMelina(player);
             }
+
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                if (plugin.getRoleManager().getRole(p).equalsIgnoreCase("Maliketh")) {
+                    plugin.getMalikethRole().giveMalikethItems(p);
+                }
+            }
         }
 
         // ✅ CORRECTION : Sauvegarde proprement les rôles en convertissant UUID en String
