@@ -20,6 +20,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import static java.lang.System.currentTimeMillis;
+
 public class MelinaRole implements Listener, CommandExecutor {
     private final Main plugin;
     private final HashMap<UUID, Long> healCooldowns = new HashMap<>(); // Cooldown des soins
@@ -82,7 +84,7 @@ public class MelinaRole implements Listener, CommandExecutor {
         UUID melinaUUID = melina.getUniqueId();
         if (visionCooldowns.containsKey(melinaUUID)) {
             long cooldownEnd = visionCooldowns.get(melinaUUID);
-            long timeLeft = (cooldownEnd - System.currentTimeMillis()) / 1000;
+            long timeLeft = (cooldownEnd - currentTimeMillis()) / 1000;
             if (timeLeft > 0) {
                 melina.sendMessage(ChatColor.RED + "❌ Vision des Âmes est encore en cooldown pour " + timeLeft + " secondes !");
                 return true;
@@ -113,7 +115,7 @@ public class MelinaRole implements Listener, CommandExecutor {
         melina.sendMessage(ChatColor.LIGHT_PURPLE + "✨ Le joueur " + ChatColor.WHITE + target.getName() + ChatColor.LIGHT_PURPLE + " appartient au camp : " + ChatColor.GOLD + camp);
 
         // ✅ Applique le cooldown de 6 minutes
-        visionCooldowns.put(melinaUUID, System.currentTimeMillis() + (6 * 60 * 1000));
+        visionCooldowns.put(melinaUUID, currentTimeMillis() + (6 * 60 * 1000));
 
         // ✅ Met à jour le mana affiché
         plugin.getManaManager().updateManaDisplay(melina);
@@ -136,7 +138,7 @@ public class MelinaRole implements Listener, CommandExecutor {
         // Vérification du cooldown
         UUID melinaUUID = melina.getUniqueId();
         if (healCooldowns.containsKey(melinaUUID)) {
-            long remaining = (healCooldowns.get(melinaUUID) - System.currentTimeMillis()) / 1000;
+            long remaining = (healCooldowns.get(melinaUUID) - currentTimeMillis()) / 1000;
             if (remaining > 0) {
                 melina.sendMessage(ChatColor.RED + "⏳ Tu dois encore attendre " + remaining + " secondes avant d’utiliser Soin Divin !");
                 return true;
@@ -164,7 +166,7 @@ public class MelinaRole implements Listener, CommandExecutor {
         }, 0L, 20L);
 
         // ✅ Active le cooldown
-        healCooldowns.put(melinaUUID, System.currentTimeMillis() + (5 * 60 * 1000));
+        healCooldowns.put(melinaUUID, currentTimeMillis() + (5 * 60 * 1000));
 
         // ✅ Messages de confirmation
         melina.sendMessage(ChatColor.AQUA + "✨ Tu as utilisé " + ChatColor.GOLD + "Soin Divin ✨💖" + ChatColor.AQUA + " sur " + ChatColor.WHITE + target.getName() + " !");
@@ -186,7 +188,7 @@ public class MelinaRole implements Listener, CommandExecutor {
         String role = plugin.getRoleManager().getRole(player);
         ItemStack item = player.getInventory().getItemInMainHand();
 
-        if (!role.equalsIgnoreCase("Melina")) return;
+        if (role == null || !role.equalsIgnoreCase("Melina")) return;
         if (item.getType() != Material.NETHER_STAR || !item.hasItemMeta() ||
                 !item.getItemMeta().getDisplayName().equals(ChatColor.GOLD + "⚡ Lumière de Grâce")) {
             return;
@@ -195,7 +197,7 @@ public class MelinaRole implements Listener, CommandExecutor {
         // ✅ Vérifie le cooldown
         UUID playerUUID = player.getUniqueId();
         if (dashCooldowns.containsKey(playerUUID)) {
-            long timeLeft = (dashCooldowns.get(playerUUID) - System.currentTimeMillis()) / 1000;
+            long timeLeft = (dashCooldowns.get(playerUUID) - currentTimeMillis()) / 1000;
             if (timeLeft > 0) {
                 player.sendMessage(ChatColor.RED + "❌ Tu dois encore attendre " + timeLeft + " secondes avant de réutiliser cette capacité !");
                 return;
@@ -210,7 +212,7 @@ public class MelinaRole implements Listener, CommandExecutor {
         plugin.getManaManager().updateManaDisplay(player); // ✅ Met à jour le scoreboard
 
         // ✅ Active le cooldown
-        dashCooldowns.put(playerUUID, System.currentTimeMillis() + (4 * 60 * 1000)); // 4 minutes de cooldown
+        dashCooldowns.put(playerUUID, currentTimeMillis() + (4 * 60 * 1000)); // 4 minutes de cooldown
 
         // ✅ Calcule la destination (15 blocs en avant)
         Location start = player.getLocation();
