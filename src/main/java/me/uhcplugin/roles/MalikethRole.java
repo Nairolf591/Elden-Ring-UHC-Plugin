@@ -132,6 +132,7 @@ public class MalikethRole implements Listener, CommandExecutor {
         player.setInvulnerable(false);
         player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 999999, 0, false, false));
         player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 999999, 0, false, false));
+        player.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
 
         givePhase2Items(player);
     }
@@ -146,6 +147,7 @@ public class MalikethRole implements Listener, CommandExecutor {
         ));
 
         player.setMaxHealth(24); // Phase 1 : 12 cœurs
+        player.setHealth(24); // Rétablit la vie à 8 cœurs
 
         ItemStack ruptureBestiale = new ItemStack(Material.NETHER_STAR);
         ItemMeta meta = ruptureBestiale.getItemMeta();
