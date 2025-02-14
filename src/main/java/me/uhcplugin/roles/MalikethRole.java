@@ -25,12 +25,12 @@ public class MalikethRole implements Listener, CommandExecutor {
 
     private final Main plugin;
     private final Set<UUID> hasTransformed = new HashSet<>();
-    private final Set<UUID> sautCooldown = new HashSet<>();
-    private final Set<UUID> benedictionCooldown = new HashSet<>();
-    private final Set<UUID> ruptureCooldown = new HashSet<>();
-    private final Set<UUID> eruptionCooldown = new HashSet<>();
-    private final Set<UUID> assautCooldown = new HashSet<>();
-    private final Set<UUID> lameCooldown = new HashSet<>();
+    private final Map<UUID, Long> sautCooldown = new HashMap<>();
+    private final Map<UUID, Long> benedictionCooldown = new HashMap<>();
+    private final Map<UUID, Long> ruptureCooldown = new HashMap<>();
+    private final Map<UUID, Long> eruptionCooldown = new HashMap<>();
+    private final Map<UUID, Long> assautCooldown = new HashMap<>();
+    private final Map<UUID, Long> lameCooldown = new HashMap<>();
     private final Map<UUID, Boolean> isLameActive = new HashMap<>();
 
     public MalikethRole(Main plugin) {
@@ -81,13 +81,12 @@ public class MalikethRole implements Listener, CommandExecutor {
         player.playSound(loc, Sound.ENTITY_WITHER_AMBIENT, 1.5f, 0.5f);
         player.playSound(loc, Sound.ENTITY_WITHER_SPAWN, 1.5f, 0.5f);
 
-        // Particules visibles pour Bedrock (SMOKE_LARGE, SOUL, FLAME)
         player.spawnParticle(Particle.SMOKE_LARGE, loc, 200, 1, 1, 1, 0.2);
         player.spawnParticle(Particle.SOUL, loc, 300, 1, 2, 1, 0.1);
         player.spawnParticle(Particle.FLAME, loc, 150, 1, 2, 1, 0.1);
 
         player.setWalkSpeed(0);
-        player.setInvulnerable(true); // Invincible pendant la transformation
+        player.setInvulnerable(true);
 
         new BukkitRunnable() {
             int countdown = 5;
@@ -106,8 +105,9 @@ public class MalikethRole implements Listener, CommandExecutor {
     }
 
     private void completeTransformation(Player player) {
-        player.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
-        player.setMaxHealth(20);
+        // Phase 2 : 8 cœurs max
+        player.setMaxHealth(16); // 8 cœurs (1 cœur = 2 points de vie)
+        player.setHealth(16); // Rétablit la vie à 8 cœurs
 
         removePhase1Items(player);
         clearPhase1Cooldowns(player);
@@ -115,7 +115,6 @@ public class MalikethRole implements Listener, CommandExecutor {
         player.sendMessage(ChatColor.RED + "🔥 Tu es maintenant la Lame Noire !");
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 2.0f, 1.0f);
 
-        // Effets visuels supplémentaires lors de la transformation en Phase 2
         Location loc = player.getLocation();
         player.spawnParticle(Particle.FLAME, loc, 400, 1, 2, 1, 0.2);
         player.spawnParticle(Particle.SOUL_FIRE_FLAME, loc, 300, 1, 2, 1, 0.1);
@@ -123,7 +122,7 @@ public class MalikethRole implements Listener, CommandExecutor {
         player.spawnParticle(Particle.SOUL, loc, 250, 1, 2, 1, 0.1);
 
         player.setWalkSpeed(0.2f);
-        player.setInvulnerable(false); // Fin de l'invincibilité
+        player.setInvulnerable(false);
         player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 999999, 0, false, false));
         player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 999999, 0, false, false));
 
@@ -139,7 +138,7 @@ public class MalikethRole implements Listener, CommandExecutor {
                 false
         ));
 
-        player.setMaxHealth(player.getMaxHealth() + 4);
+        player.setMaxHealth(24); // Phase 1 : 12 cœurs
 
         ItemStack ruptureBestiale = new ItemStack(Material.NETHER_STAR);
         ItemMeta meta = ruptureBestiale.getItemMeta();
@@ -233,44 +232,58 @@ public class MalikethRole implements Listener, CommandExecutor {
     }
 
     public void activateRuptureBestiale(Player player) {
-        if (ruptureCooldown.contains(player.getUniqueId())) {
-            player.sendMessage(ChatColor.RED + "❌ Rupture Bestiale est en recharge !");
+        if (ruptureCooldown.containsKey(player.getUniqueId())) {
+            long cooldownEnd = ruptureCooldown.get(player.getUniqueId());
+            long secondsLeft = (cooldownEnd - System.currentTimeMillis()) / 1000;
+            player.sendMessage(ChatColor.RED + "❌ Rupture Bestiale : " + secondsLeft + "s restantes");
             return;
         }
 
-        ruptureCooldown.add(player.getUniqueId());
-        Bukkit.getScheduler().runTaskLater(plugin, () -> ruptureCooldown.remove(player.getUniqueId()), 20L * 180);
+        ruptureCooldown.put(player.getUniqueId(), System.currentTimeMillis() + (3 * 60 * 1000)); // 3 minutes
 
         Location loc = player.getLocation();
         player.getWorld().playSound(loc, Sound.ENTITY_GENERIC_EXPLODE, 1.5f, 0.5f);
-
-        // Particules pour marquer la zone d'effet
         player.getWorld().spawnParticle(Particle.EXPLOSION_LARGE, loc, 10);
         player.getWorld().spawnParticle(Particle.SMOKE_LARGE, loc, 100, 3, 3, 3, 0.2);
 
         double radius = 5.0;
         for (Player target : Bukkit.getOnlinePlayers()) {
             if (!target.equals(player) && target.getLocation().distance(loc) <= radius) {
-                target.damage(4.0);
-                target.setVelocity(target.getLocation().toVector().subtract(loc.toVector()).normalize().multiply(0.5));
+                // Applique les dégâts
+                target.damage(4.0, player); // 2 cœurs de dégâts
+
+                // Applique le repoussement
+                Vector direction = target.getLocation().toVector().subtract(loc.toVector()).normalize();
+                direction.setY(0.5); // Ajoute un peu de hauteur pour le repoussement
+                target.setVelocity(direction.multiply(1.5)); // Force du repoussement
+
                 target.sendMessage(ChatColor.RED + "💥 Une onde de choc t’a repoussé !");
             }
         }
+
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            ruptureCooldown.remove(player.getUniqueId());
+            if (player.isOnline()) {
+                player.sendMessage(ChatColor.GREEN + "✅ Rupture Bestiale est prête !");
+            }
+        }, 3 * 60 * 20L); // 3 minutes
     }
 
     private void activateSautBestial(Player player) {
-        if (sautCooldown.contains(player.getUniqueId())) {
-            player.sendMessage(ChatColor.RED + "❌ Saut Bestial est en recharge !");
+        if (sautCooldown.containsKey(player.getUniqueId())) {
+            long cooldownEnd = sautCooldown.get(player.getUniqueId());
+            long secondsLeft = (cooldownEnd - System.currentTimeMillis()) / 1000;
+            player.sendMessage(ChatColor.RED + "❌ Saut Bestial : " + secondsLeft + "s restantes");
             return;
         }
+
+        sautCooldown.put(player.getUniqueId(), System.currentTimeMillis() + (5 * 60 * 1000)); // 5 minutes
 
         Vector direction = player.getLocation().getDirection().normalize().multiply(7);
         Location destination = player.getLocation().add(direction);
 
         player.setVelocity(direction.multiply(0.5));
         player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_FLAP, 1.0f, 0.5f);
-
-        // Particules pendant le saut
         player.spawnParticle(Particle.CLOUD, player.getLocation(), 50, 1, 1, 1, 0.1);
 
         player.getNearbyEntities(3, 3, 3).forEach(entity -> {
@@ -279,47 +292,56 @@ public class MalikethRole implements Listener, CommandExecutor {
             }
         });
 
-        sautCooldown.add(player.getUniqueId());
-        Bukkit.getScheduler().runTaskLater(plugin, () ->
-                sautCooldown.remove(player.getUniqueId()), 20L * 60 * 5);
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            sautCooldown.remove(player.getUniqueId());
+            if (player.isOnline()) {
+                player.sendMessage(ChatColor.GREEN + "✅ Saut Bestial est prêt !");
+            }
+        }, 5 * 60 * 20L); // 5 minutes
     }
 
     private void activateBenediction(Player player) {
-        if (benedictionCooldown.contains(player.getUniqueId())) {
-            player.sendMessage(ChatColor.RED + "❌ Bénédiction de Destin est en recharge !");
+        // Vérifie si la compétence est en cooldown
+        if (benedictionCooldown.containsKey(player.getUniqueId())) {
+            long cooldownEnd = benedictionCooldown.get(player.getUniqueId());
+            long secondsLeft = (cooldownEnd - System.currentTimeMillis()) / 1000;
+            player.sendMessage(ChatColor.RED + "❌ Bénédiction de Destin : " + secondsLeft + "s restantes");
             return;
         }
 
-        player.addPotionEffect(new PotionEffect(
-                PotionEffectType.ABSORPTION,
-                20 * 60 * 3,
-                2
-        ));
+        // Applique le cooldown (1 jour)
+        benedictionCooldown.put(player.getUniqueId(), System.currentTimeMillis() + (24 * 60 * 60 * 1000));
 
-        player.spawnParticle(Particle.HEART, player.getLocation(), 30);
-        player.playSound(player.getLocation(), Sound.ITEM_TOTEM_USE, 1.0f, 1.0f);
+        // Vérifie si le joueur a déjà l'effet Absorption
+        if (!player.hasPotionEffect(PotionEffectType.ABSORPTION)) {
+            // Applique l'effet Absorption III pendant 3 minutes
+            player.addPotionEffect(new PotionEffect(
+                    PotionEffectType.ABSORPTION,
+                    20 * 60 * 3, // 3 minutes (en ticks)
+                    2 // Niveau III
+            ));
 
-        benedictionCooldown.add(player.getUniqueId());
-        Bukkit.getScheduler().runTaskLater(plugin, () ->
-                benedictionCooldown.remove(player.getUniqueId()), 20L * 60 * 60 * 24);
+            // Effets visuels et sonores
+            player.spawnParticle(Particle.HEART, player.getLocation(), 30);
+            player.playSound(player.getLocation(), Sound.ITEM_TOTEM_USE, 1.0f, 1.0f);
+
+            player.sendMessage(ChatColor.GOLD + "✨ Bénédiction de Destin active ! Tu as reçu Absorption III pendant 3 minutes.");
+        } else {
+            player.sendMessage(ChatColor.RED + "❌ Tu as déjà l'effet Absorption !");
+            return; // On arrête ici si le joueur a déjà l'effet
+        }
+
+        // Message de recharge après 1 jour
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            benedictionCooldown.remove(player.getUniqueId());
+            if (player.isOnline()) {
+                player.sendMessage(ChatColor.GREEN + "✅ Bénédiction de Destin est prête !");
+            }
+        }, 24 * 60 * 60 * 20L); // 1 jour en ticks
     }
 
     private void removePhase1Items(Player player) {
-        ItemStack[] phase1Items = {
-                new ItemStack(Material.NETHER_STAR),
-                new ItemStack(Material.NETHER_STAR),
-                new ItemStack(Material.NETHER_STAR)
-        };
-
-        for (ItemStack item : player.getInventory().getContents()) {
-            if (item != null) {
-                for (ItemStack phase1Item : phase1Items) {
-                    if (item.getType() == phase1Item.getType() && item.hasItemMeta()) {
-                        player.getInventory().remove(item);
-                    }
-                }
-            }
-        }
+        player.getInventory().remove(Material.NETHER_STAR);
     }
 
     private void clearPhase1Cooldowns(Player player) {
@@ -329,15 +351,17 @@ public class MalikethRole implements Listener, CommandExecutor {
     }
 
     private void activateEruption(Player player) {
-        if (eruptionCooldown.contains(player.getUniqueId())) {
-            player.sendMessage(ChatColor.RED + "❌ Éruption de Mort est en recharge !");
+        if (eruptionCooldown.containsKey(player.getUniqueId())) {
+            long cooldownEnd = eruptionCooldown.get(player.getUniqueId());
+            long secondsLeft = (cooldownEnd - System.currentTimeMillis()) / 1000;
+            player.sendMessage(ChatColor.RED + "❌ Éruption de Mort : " + secondsLeft + "s restantes");
             return;
         }
 
+        eruptionCooldown.put(player.getUniqueId(), System.currentTimeMillis() + (4 * 60 * 1000)); // 4 minutes
+
         Location loc = player.getLocation();
         player.getWorld().playSound(loc, Sound.ENTITY_WITHER_SHOOT, 1.5f, 0.5f);
-
-        // Particules pour marquer la zone d'effet
         player.getWorld().spawnParticle(Particle.SMOKE_LARGE, loc, 200, 3, 3, 3, 0.2);
         player.getWorld().spawnParticle(Particle.FLAME, loc, 150, 3, 3, 3, 0.1);
 
@@ -350,14 +374,19 @@ public class MalikethRole implements Listener, CommandExecutor {
             }
         }
 
-        eruptionCooldown.add(player.getUniqueId());
-        Bukkit.getScheduler().runTaskLater(plugin, () ->
-                eruptionCooldown.remove(player.getUniqueId()), 20L * 60 * 4);
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            eruptionCooldown.remove(player.getUniqueId());
+            if (player.isOnline()) {
+                player.sendMessage(ChatColor.GREEN + "✅ Éruption de Mort est prête !");
+            }
+        }, 4 * 60 * 20L); // 4 minutes
     }
 
     private void activateAssaut(Player player) {
-        if (assautCooldown.contains(player.getUniqueId())) {
-            player.sendMessage(ChatColor.RED + "❌ Assaut Bestial est en recharge !");
+        if (assautCooldown.containsKey(player.getUniqueId())) {
+            long cooldownEnd = assautCooldown.get(player.getUniqueId());
+            long secondsLeft = (cooldownEnd - System.currentTimeMillis()) / 1000;
+            player.sendMessage(ChatColor.RED + "❌ Assaut Bestial : " + secondsLeft + "s restantes");
             return;
         }
 
@@ -375,71 +404,94 @@ public class MalikethRole implements Listener, CommandExecutor {
 
         if (target == null) {
             player.sendMessage(ChatColor.RED + "❌ Aucun ennemi à proximité !");
-            return;
+            return; // On arrête ici si aucun joueur n'est trouvé
         }
 
+        // Applique le cooldown uniquement si la compétence est utilisée
+        assautCooldown.put(player.getUniqueId(), System.currentTimeMillis() + (6 * 60 * 1000)); // 6 minutes
+
+        // Téléporte Maliketh sur le joueur cible
         player.teleport(target.getLocation());
-        target.damage(6.0);
-        target.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 100, 0));
+        target.damage(6.0, player); // 3 cœurs de dégâts
+        target.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 100, 0)); // Faiblesse I pendant 5 secondes
+
+        // Effets visuels et sonores
         player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_FLAP, 1.0f, 0.5f);
         player.spawnParticle(Particle.SMOKE_LARGE, player.getLocation(), 50, 1, 1, 1, 0.2);
 
-        assautCooldown.add(player.getUniqueId());
-        Bukkit.getScheduler().runTaskLater(plugin, () ->
-                assautCooldown.remove(player.getUniqueId()), 20L * 60 * 6);
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            assautCooldown.remove(player.getUniqueId());
+            if (player.isOnline()) {
+                player.sendMessage(ChatColor.GREEN + "✅ Assaut Bestial est prêt !");
+            }
+        }, 6 * 60 * 20L); // 6 minutes
     }
 
     private void activateLame(Player player) {
-        if (lameCooldown.contains(player.getUniqueId())) {
-            player.sendMessage(ChatColor.RED + "❌ Lame de la Mort est en recharge !");
+        if (lameCooldown.containsKey(player.getUniqueId())) {
+            long cooldownEnd = lameCooldown.get(player.getUniqueId());
+            long secondsLeft = (cooldownEnd - System.currentTimeMillis()) / 1000;
+            player.sendMessage(ChatColor.RED + "❌ Lame de la Mort : " + secondsLeft + "s restantes");
             return;
         }
 
+        lameCooldown.put(player.getUniqueId(), System.currentTimeMillis() + (24 * 60 * 60 * 1000)); // 1 jour
+
         player.setWalkSpeed(0);
-        player.setInvulnerable(true); // Invincible pendant l'animation
+        player.setInvulnerable(true);
         player.sendMessage(ChatColor.DARK_RED + "⚔️ Tu invoques la Lame de la Mort...");
         player.getWorld().playSound(player.getLocation(), Sound.ENTITY_WITHER_SPAWN, 2.0f, 0.5f);
 
-        // Particules pendant l'invocation
         player.spawnParticle(Particle.SOUL, player.getLocation(), 300, 1, 1, 1, 0.2);
         player.spawnParticle(Particle.FLAME, player.getLocation(), 200, 1, 1, 1, 0.1);
 
+        // Active l'effet Wither sur les attaques
+        isLameActive.put(player.getUniqueId(), true);
+
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
             player.setWalkSpeed(0.2f);
-            player.setInvulnerable(false); // Fin de l'invincibilité
-            player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 400, 0));
+            player.setInvulnerable(false);
+            player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 400, 0)); // +5% de dégâts
             player.sendMessage(ChatColor.RED + "🔥 La Lame de la Mort est active !");
 
-            // Effets visuels lors de la recharge
+            // Désactive l'effet Wither après 20 secondes
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                isLameActive.remove(player.getUniqueId());
                 player.sendMessage(ChatColor.GRAY + "⚔️ La Lame de la Mort s'est dissipée...");
                 player.spawnParticle(Particle.SMOKE_LARGE, player.getLocation(), 100, 1, 1, 1, 0.2);
                 player.spawnParticle(Particle.SOUL, player.getLocation(), 150, 1, 1, 1, 0.1);
-            }, 20L * 20);
-        }, 20L * 10);
+            }, 20L * 20); // 20 secondes
+        }, 20L * 10); // 10 secondes d'invocation
 
-        lameCooldown.add(player.getUniqueId());
-        Bukkit.getScheduler().runTaskLater(plugin, () ->
-                lameCooldown.remove(player.getUniqueId()), 20L * 60 * 60 * 24);
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            lameCooldown.remove(player.getUniqueId());
+            if (player.isOnline()) {
+                player.sendMessage(ChatColor.GREEN + "✅ Lame de la Mort est prête !");
+            }
+        }, 24 * 60 * 60 * 20L); // 1 jour
     }
 
     @EventHandler
     public void onPlayerDamage(EntityDamageByEntityEvent event) {
         if (event.getDamager() instanceof Player) {
             Player player = (Player) event.getDamager();
+
+            // Vérifie si la Lame de la Mort est active
             if (isLameActive.containsKey(player.getUniqueId())) {
                 if (event.getEntity() instanceof LivingEntity) {
                     LivingEntity target = (LivingEntity) event.getEntity();
-                    target.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 40, 0));
-                }
 
-                // Augmentation des dégâts de 5%
-                event.setDamage(event.getDamage() * 1.05);
+                    // Applique Wither I pendant 2 secondes (40 ticks)
+                    target.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 40, 0));
+
+                    // Augmente les dégâts de 5%
+                    event.setDamage(event.getDamage() * 1.05);
+                }
             }
         }
     }
 
     public boolean isInPhase1(UUID playerUUID) {
-        return !hasTransformed.contains(playerUUID); // Si le joueur n'a pas encore transformé, il est en Phase 1
+        return !hasTransformed.contains(playerUUID);
     }
 }
