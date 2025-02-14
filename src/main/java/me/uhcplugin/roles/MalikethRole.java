@@ -81,6 +81,8 @@ public class MalikethRole implements Listener, CommandExecutor {
         Location loc = player.getLocation();
         player.playSound(loc, Sound.ENTITY_WITHER_AMBIENT, 1.5f, 0.5f);
         player.playSound(loc, Sound.ENTITY_WITHER_SPAWN, 1.5f, 0.5f);
+        player.getWorld().strikeLightningEffect(player.getLocation());
+        player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_FLAP, 1.5f, 0.5f);
 
         player.spawnParticle(Particle.SMOKE_LARGE, loc, 200, 1, 1, 1, 0.2);
         player.spawnParticle(Particle.SOUL, loc, 300, 1, 2, 1, 0.1);
@@ -121,6 +123,10 @@ public class MalikethRole implements Listener, CommandExecutor {
         player.spawnParticle(Particle.SOUL_FIRE_FLAME, loc, 300, 1, 2, 1, 0.1);
         player.spawnParticle(Particle.SMOKE_LARGE, loc, 200, 1, 2, 1, 0.2);
         player.spawnParticle(Particle.SOUL, loc, 250, 1, 2, 1, 0.1);
+        // 🔊 Son de transformation + foudre
+        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 2.0f, 0.5f);
+        player.getWorld().strikeLightningEffect(player.getLocation()); // Éclair visuel sans dégâts
+
 
         player.setWalkSpeed(0.2f);
         player.setInvulnerable(false);
@@ -315,49 +321,62 @@ public class MalikethRole implements Listener, CommandExecutor {
         }, 5 * 60 * 20L); // 5 minutes
     }
 
-    public void activateBenediction(Player player) {
-        if (benedictionCooldown.containsKey(player.getUniqueId())) {
-            long cooldownEnd = benedictionCooldown.get(player.getUniqueId());
+    private final Map<UUID, Boolean> benedictionMessageShown = new HashMap<>(); // Nouvelle map pour suivre l'affichage du message
+
+    private void activateBenediction(Player player) {
+        UUID playerId = player.getUniqueId();
+
+        // 🔄 Vérifie si la compétence est en cooldown
+        if (benedictionCooldown.containsKey(playerId)) {
+            long cooldownEnd = benedictionCooldown.get(playerId);
             long secondsLeft = (cooldownEnd - System.currentTimeMillis()) / 1000;
 
-            if (!messageCooldowns.containsKey(player.getUniqueId()) ||
-                    System.currentTimeMillis() - messageCooldowns.get(player.getUniqueId()) > 2000) {
+            // 🔄 Affiche le message une seule fois toutes les 2 secondes
+            if (!messageCooldowns.containsKey(playerId) ||
+                    System.currentTimeMillis() - messageCooldowns.get(playerId) > 2000) {
 
                 player.sendMessage(ChatColor.RED + "❌ Bénédiction de Destin : " + secondsLeft + "s restantes");
-                messageCooldowns.put(player.getUniqueId(), System.currentTimeMillis());
+                messageCooldowns.put(playerId, System.currentTimeMillis());
             }
             return;
         }
 
-        // Applique le cooldown (1 jour)
-        benedictionCooldown.put(player.getUniqueId(), System.currentTimeMillis() + (24 * 60 * 60 * 1000));
+        // 🔊 Son SACRÉ uniquement pour Maliketh
+        player.playSound(player.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 1.5f, 0.8f);
 
-        // Vérifie si le joueur a déjà l'effet Absorption
-        if (!player.hasPotionEffect(PotionEffectType.ABSORPTION)) {
-            // Applique l'effet Absorption III pendant 3 minutes
-            player.addPotionEffect(new PotionEffect(
-                    PotionEffectType.ABSORPTION,
-                    20 * 60 * 3, // 3 minutes (en ticks)
-                    2 // Niveau III
-            ));
+        // 🌟 Particules DORÉES visibles uniquement par Maliketh
+        player.spawnParticle(
+                Particle.FIREWORKS_SPARK,
+                player.getLocation().add(0, 2, 0), // Au-dessus du joueur
+                100, // Nombre de particules
+                1, 1, 1, // Étendue
+                0.5 // Vitesse
+        );
 
-            // Effets visuels et sonores
-            player.spawnParticle(Particle.HEART, player.getLocation(), 30);
-            player.playSound(player.getLocation(), Sound.ITEM_TOTEM_USE, 1.0f, 1.0f);
+        // 🔄 Remplacement de l'effet Absorption par une régénération personnalisée
+        new BukkitRunnable() {
+            int ticks = 0;
 
-            player.sendMessage(ChatColor.GOLD + "✨ Bénédiction de Destin active ! Tu as reçu Absorption III pendant 3 minutes.");
-        } else {
-            player.sendMessage(ChatColor.RED + "❌ Tu as déjà l'effet Absorption !");
-            return; // On arrête ici si le joueur a déjà l'effet
-        }
+            @Override
+            public void run() {
+                if (ticks >= 15 * 20) { // 15 secondes
+                    cancel();
+                    return;
+                }
 
-        // Message de recharge après 1 jour
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            benedictionCooldown.remove(player.getUniqueId());
-            if (player.isOnline()) {
-                player.sendMessage(ChatColor.GREEN + "✅ Bénédiction de Destin est prête !");
+                if (ticks % (3 * 20) == 0) { // Toutes les 3 secondes
+                    double currentHealth = player.getHealth();
+                    player.setHealth(Math.min(currentHealth + 1, player.getMaxHealth())); // +0.5 ❤️
+                    player.sendMessage(ChatColor.GREEN + "♻️ La bénédiction soigne tes blessures...");
+                }
+
+                ticks += 10; // Vérifie toutes les 0.5s
             }
-        }, 24 * 60 * 60 * 20L); // 1 jour en ticks
+        }.runTaskTimer(plugin, 0, 10);
+
+        // ✅ Cooldown de 1 jour
+        benedictionCooldown.put(playerId, System.currentTimeMillis() + (60 * 60 * 1000));
+        player.sendMessage(ChatColor.GOLD + "✨ Une énergie apaisante t'enveloppe pendant 15 secondes !");
     }
 
     private void removePhase1Items(Player player) {
@@ -486,6 +505,8 @@ public class MalikethRole implements Listener, CommandExecutor {
 
         player.spawnParticle(Particle.SOUL, player.getLocation(), 300, 1, 1, 1, 0.2);
         player.spawnParticle(Particle.FLAME, player.getLocation(), 200, 1, 1, 1, 0.1);
+        player.getWorld().strikeLightningEffect(player.getLocation());
+        player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 1.5f, 0.5f);
 
         // Active l'effet Wither sur les attaques
         isLameActive.put(player.getUniqueId(), true);
@@ -516,6 +537,12 @@ public class MalikethRole implements Listener, CommandExecutor {
             player.sendMessage(ChatColor.RED + "❌ La Lame de la Mort est déjà active !");
             return;
         }
+        // 🔄 Réinitialisation FORCÉE de la vitesse après l'animation
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            player.setWalkSpeed(0.2f); // Valeur par défaut
+            player.setInvulnerable(false);
+            Bukkit.getLogger().info("[DEBUG] Vitesse réinitialisée pour " + player.getName()); // Log de vérification
+        }, 20L * 6); // 6 secondes
     }
 
     @EventHandler
