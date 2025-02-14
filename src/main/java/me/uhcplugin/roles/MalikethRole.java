@@ -32,6 +32,7 @@ public class MalikethRole implements Listener, CommandExecutor {
     private final Map<UUID, Long> assautCooldown = new HashMap<>();
     private final Map<UUID, Long> lameCooldown = new HashMap<>();
     private final Map<UUID, Boolean> isLameActive = new HashMap<>();
+    private final Map<UUID, Long> messageCooldowns = new HashMap<>(); // Nouvelle map pour gérer les messages
 
     public MalikethRole(Main plugin) {
         this.plugin = plugin;
@@ -235,7 +236,14 @@ public class MalikethRole implements Listener, CommandExecutor {
         if (ruptureCooldown.containsKey(player.getUniqueId())) {
             long cooldownEnd = ruptureCooldown.get(player.getUniqueId());
             long secondsLeft = (cooldownEnd - System.currentTimeMillis()) / 1000;
-            player.sendMessage(ChatColor.RED + "❌ Rupture Bestiale : " + secondsLeft + "s restantes");
+
+            // 🔄 Vérifie si le message a déjà été envoyé il y a moins de 2 secondes
+            if (!messageCooldowns.containsKey(player.getUniqueId()) ||
+                    System.currentTimeMillis() - messageCooldowns.get(player.getUniqueId()) > 2000) {
+
+                player.sendMessage(ChatColor.RED + "❌ Rupture Bestiale : " + secondsLeft + "s restantes");
+                messageCooldowns.put(player.getUniqueId(), System.currentTimeMillis());
+            }
             return;
         }
 
@@ -269,13 +277,20 @@ public class MalikethRole implements Listener, CommandExecutor {
         }, 3 * 60 * 20L); // 3 minutes
     }
 
-    private void activateSautBestial(Player player) {
+    public void activateSautBestial(Player player) {
         if (sautCooldown.containsKey(player.getUniqueId())) {
             long cooldownEnd = sautCooldown.get(player.getUniqueId());
             long secondsLeft = (cooldownEnd - System.currentTimeMillis()) / 1000;
-            player.sendMessage(ChatColor.RED + "❌ Saut Bestial : " + secondsLeft + "s restantes");
+
+            if (!messageCooldowns.containsKey(player.getUniqueId()) ||
+                    System.currentTimeMillis() - messageCooldowns.get(player.getUniqueId()) > 2000) {
+
+                player.sendMessage(ChatColor.RED + "❌ Saut Bestial : " + secondsLeft + "s restantes");
+                messageCooldowns.put(player.getUniqueId(), System.currentTimeMillis());
+            }
             return;
         }
+
 
         sautCooldown.put(player.getUniqueId(), System.currentTimeMillis() + (5 * 60 * 1000)); // 5 minutes
 
@@ -300,12 +315,17 @@ public class MalikethRole implements Listener, CommandExecutor {
         }, 5 * 60 * 20L); // 5 minutes
     }
 
-    private void activateBenediction(Player player) {
-        // Vérifie si la compétence est en cooldown
+    public void activateBenediction(Player player) {
         if (benedictionCooldown.containsKey(player.getUniqueId())) {
             long cooldownEnd = benedictionCooldown.get(player.getUniqueId());
             long secondsLeft = (cooldownEnd - System.currentTimeMillis()) / 1000;
-            player.sendMessage(ChatColor.RED + "❌ Bénédiction de Destin : " + secondsLeft + "s restantes");
+
+            if (!messageCooldowns.containsKey(player.getUniqueId()) ||
+                    System.currentTimeMillis() - messageCooldowns.get(player.getUniqueId()) > 2000) {
+
+                player.sendMessage(ChatColor.RED + "❌ Bénédiction de Destin : " + secondsLeft + "s restantes");
+                messageCooldowns.put(player.getUniqueId(), System.currentTimeMillis());
+            }
             return;
         }
 
@@ -350,11 +370,18 @@ public class MalikethRole implements Listener, CommandExecutor {
         ruptureCooldown.remove(player.getUniqueId());
     }
 
-    private void activateEruption(Player player) {
+    public void activateEruption(Player player) {
         if (eruptionCooldown.containsKey(player.getUniqueId())) {
             long cooldownEnd = eruptionCooldown.get(player.getUniqueId());
             long secondsLeft = (cooldownEnd - System.currentTimeMillis()) / 1000;
-            player.sendMessage(ChatColor.RED + "❌ Éruption de Mort : " + secondsLeft + "s restantes");
+
+            // 🔄 Vérifie si le message a déjà été envoyé il y a moins de 2 secondes
+            if (!messageCooldowns.containsKey(player.getUniqueId()) ||
+                    System.currentTimeMillis() - messageCooldowns.get(player.getUniqueId()) > 2000) {
+
+                player.sendMessage(ChatColor.RED + "❌ Éruption de Mort : " + secondsLeft + "s restantes");
+                messageCooldowns.put(player.getUniqueId(), System.currentTimeMillis());
+            }
             return;
         }
 
@@ -382,11 +409,18 @@ public class MalikethRole implements Listener, CommandExecutor {
         }, 4 * 60 * 20L); // 4 minutes
     }
 
-    private void activateAssaut(Player player) {
+    public void activateAssaut(Player player) {
         if (assautCooldown.containsKey(player.getUniqueId())) {
             long cooldownEnd = assautCooldown.get(player.getUniqueId());
             long secondsLeft = (cooldownEnd - System.currentTimeMillis()) / 1000;
-            player.sendMessage(ChatColor.RED + "❌ Assaut Bestial : " + secondsLeft + "s restantes");
+
+            // 🔄 Vérifie si le message a déjà été envoyé il y a moins de 2 secondes
+            if (!messageCooldowns.containsKey(player.getUniqueId()) ||
+                    System.currentTimeMillis() - messageCooldowns.get(player.getUniqueId()) > 2000) {
+
+                player.sendMessage(ChatColor.RED + "❌ Assaut Bestial : " + secondsLeft + "s restantes");
+                messageCooldowns.put(player.getUniqueId(), System.currentTimeMillis());
+            }
             return;
         }
 
@@ -427,13 +461,21 @@ public class MalikethRole implements Listener, CommandExecutor {
         }, 6 * 60 * 20L); // 6 minutes
     }
 
-    private void activateLame(Player player) {
+    public void activateLame(Player player) {
         if (lameCooldown.containsKey(player.getUniqueId())) {
             long cooldownEnd = lameCooldown.get(player.getUniqueId());
             long secondsLeft = (cooldownEnd - System.currentTimeMillis()) / 1000;
-            player.sendMessage(ChatColor.RED + "❌ Lame de la Mort : " + secondsLeft + "s restantes");
+
+            // 🔄 Vérifie si le message a déjà été envoyé il y a moins de 2 secondes
+            if (!messageCooldowns.containsKey(player.getUniqueId()) ||
+                    System.currentTimeMillis() - messageCooldowns.get(player.getUniqueId()) > 2000) {
+
+                player.sendMessage(ChatColor.RED + "❌ Lame de la Mort : " + secondsLeft + "s restantes");
+                messageCooldowns.put(player.getUniqueId(), System.currentTimeMillis());
+            }
             return;
         }
+
 
         lameCooldown.put(player.getUniqueId(), System.currentTimeMillis() + (24 * 60 * 60 * 1000)); // 1 jour
 

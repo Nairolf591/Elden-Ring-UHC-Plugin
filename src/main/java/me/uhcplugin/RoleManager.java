@@ -6,6 +6,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
@@ -25,13 +26,15 @@ public class RoleManager implements CommandExecutor {
         this.playerRoles = new HashMap<>();
         loadRolesFromConfig();
 
-        // ✅ Restauration des rôles depuis la config au démarrage
         Bukkit.getLogger().info("[DEBUG]: Tentative de restauration des rôles au démarrage...");
-        if (plugin.getConfig().contains("savedRoles")) {
-            for (String uuidString : plugin.getConfig().getConfigurationSection("savedRoles").getKeys(false)) {
+
+        // 🔄 Correction ici : Vérifier si la section existe ET n'est pas null
+        ConfigurationSection savedRolesSection = plugin.getConfig().getConfigurationSection("savedRoles");
+        if (savedRolesSection != null) { // ✅ Évite le NPE
+            for (String uuidString : savedRolesSection.getKeys(false)) {
                 try {
                     UUID playerUUID = UUID.fromString(uuidString);
-                    String role = plugin.getConfig().getString("savedRoles." + uuidString);
+                    String role = savedRolesSection.getString(uuidString);
                     playerRoles.put(playerUUID, role);
                 } catch (IllegalArgumentException e) {
                     Bukkit.getLogger().warning("[DEBUG]: Erreur de conversion d'UUID : " + uuidString);
