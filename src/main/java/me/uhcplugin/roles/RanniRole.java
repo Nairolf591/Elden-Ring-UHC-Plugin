@@ -289,7 +289,8 @@ public class RanniRole implements Listener, CommandExecutor {
     public void startNightResistanceTask() {
         Bukkit.getScheduler().runTaskTimer(plugin, () -> {
             for (Player player : Bukkit.getOnlinePlayers()) {
-                if (plugin.getRoleManager().getRole(player).equalsIgnoreCase("Ranni")) {
+                String role = plugin.getRoleManager().getRole(player);
+                if (role != null && role.equalsIgnoreCase("Ranni")) {
                     long time = player.getWorld().getTime();
 
                     if (time >= 13000 && time <= 23000) { // 🌙 C'est la nuit
