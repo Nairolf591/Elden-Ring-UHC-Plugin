@@ -469,6 +469,11 @@ public class MalikethRole implements Listener, CommandExecutor {
                 player.sendMessage(ChatColor.GREEN + "✅ Lame de la Mort est prête !");
             }
         }, 24 * 60 * 60 * 20L); // 1 jour
+
+        if (isLameActive.containsKey(player.getUniqueId())) {
+            player.sendMessage(ChatColor.RED + "❌ La Lame de la Mort est déjà active !");
+            return;
+        }
     }
 
     @EventHandler

@@ -40,7 +40,12 @@ public class GameManager {
             Bukkit.broadcastMessage(ChatColor.RED + "🏁 La partie est terminée !");
             Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
                 Main.getInstance().resetUHCWorld();
+                Main.getInstance().getConfig().set("savedRoles", null);
+                Main.getInstance().saveConfig();
+                RoleManager.getPlayerRoles().clear(); // Vide la map en mémoire
+                Bukkit.broadcastMessage(ChatColor.GREEN + "✨ Les rôles ont été réinitialisés !");
             }, 200L);
+
         }
     }
 
