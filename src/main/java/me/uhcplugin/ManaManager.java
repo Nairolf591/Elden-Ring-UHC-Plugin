@@ -25,6 +25,7 @@ public class ManaManager {
         int maxMana = getMaxMana(player); // Récupère la valeur max du joueur
         int newMana = Math.min(amount, maxMana); // Assure que le mana ne dépasse pas le max
         manaMap.put(player, newMana);
+
     }
 
     // ✅ Récupérer le mana d’un joueur

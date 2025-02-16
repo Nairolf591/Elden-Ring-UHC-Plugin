@@ -1,6 +1,7 @@
 package me.uhcplugin;
 
 import me.uhcplugin.roles.MelinaRole;
+import me.uhcplugin.roles.SansEclatRole;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -106,11 +107,13 @@ public class RoleManager implements CommandExecutor {
                     plugin.getMelinaRole().giveArtifactToMelina(player);
                 } else if (role.equalsIgnoreCase("Maliketh")) {
                     plugin.getMalikethRole().giveMalikethItems(player);
+                } else if (role.equalsIgnoreCase("Sans-éclat")) {
+                    player.getInventory().addItem(SansEclatRole.getSansEclatItems());
                 }
             } else {
                 // Si aucun rôle n'est disponible, attribue un rôle par défaut
-                playerRoles.put(player.getUniqueId(), "Sans-éclat");
-                player.sendMessage("§6[UHC] §aTu es Sans-éclat ! Camp : " + Camp.SOLITAIRES.getDisplayName());
+                playerRoles.put(player.getUniqueId(), "Defaut");
+                player.sendMessage("§6[UHC] §aTu es defaut ! Camp : " + Camp.SOLITAIRES.getDisplayName());
             }
         }
 
