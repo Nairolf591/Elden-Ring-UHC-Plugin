@@ -78,55 +78,52 @@ public class RoleManager implements CommandExecutor {
         List<Player> players = new ArrayList<>(Bukkit.getOnlinePlayers());
         List<String> availableRoles = new ArrayList<>();
 
+        // Récupère les rôles activés dans la config
         for (String role : roleCamps.keySet()) {
             if (plugin.getConfig().getBoolean("roles." + role, false)) {
                 availableRoles.add(role);
             }
         }
 
+        // Mélange les joueurs et les rôles
         Collections.shuffle(players);
         Collections.shuffle(availableRoles);
 
-        int roleCount = Math.min(players.size(), availableRoles.size());
-        for (int i = 0; i < roleCount; i++) {
+        // Assigne les rôles aux joueurs
+        for (int i = 0; i < players.size(); i++) {
             Player player = players.get(i);
-            String role = availableRoles.get(i);
+            if (i < availableRoles.size()) {
+                String role = availableRoles.get(i);
+                playerRoles.put(player.getUniqueId(), role);
+                player.sendMessage("§6[UHC] §aTu es " + role + " ! Camp : " + roleCamps.get(role).getDisplayName());
+                plugin.getManaManager().assignManaBasedOnRole(player);
+                plugin.getScoreboardManager().setPlayerScoreboard(player);
 
-            boolean isEnabled = plugin.getConfig().getBoolean("roles." + role, false);
-
-            if (!isEnabled) {
-                continue;
-            }
-
-            playerRoles.put(player.getUniqueId(), role);
-            player.sendMessage("§6[UHC] §aTu es " + role + " ! Camp : " + roleCamps.get(role).getDisplayName());
-            plugin.getManaManager().assignManaBasedOnRole(player); // ✅ Ajout du mana selon le rôle
-            plugin.getScoreboardManager().setPlayerScoreboard(player);
-
-            // ✅ Si c'est Ranni, on lui donne son artefact unique
-            if (role.equalsIgnoreCase("Ranni")) {
-                plugin.getRanniRole().giveArtifactToRanni(player);
-            }
-
-            if (role.equalsIgnoreCase("Melina")) {
-                plugin.getMelinaRole().giveArtifactToMelina(player);
-            }
-
-            for (Player p : Bukkit.getOnlinePlayers()) {
-                if (plugin.getRoleManager().getRole(p).equalsIgnoreCase("Maliketh")) {
-                    plugin.getMalikethRole().giveMalikethItems(p);
+                // Donne les artefacts spécifiques aux rôles
+                if (role.equalsIgnoreCase("Ranni")) {
+                    plugin.getRanniRole().giveArtifactToRanni(player);
+                } else if (role.equalsIgnoreCase("Melina")) {
+                    plugin.getMelinaRole().giveArtifactToMelina(player);
+                } else if (role.equalsIgnoreCase("Maliketh")) {
+                    plugin.getMalikethRole().giveMalikethItems(player);
                 }
+            } else {
+                // Si aucun rôle n'est disponible, attribue un rôle par défaut
+                playerRoles.put(player.getUniqueId(), "Sans-éclat");
+                player.sendMessage("§6[UHC] §aTu es Sans-éclat ! Camp : " + Camp.SOLITAIRES.getDisplayName());
             }
         }
 
-        // ✅ CORRECTION : Sauvegarde proprement les rôles en convertissant UUID en String
+        // Sauvegarde les rôles dans la config
         Map<String, String> savedRolesMap = new HashMap<>();
         for (Map.Entry<UUID, String> entry : playerRoles.entrySet()) {
             savedRolesMap.put(entry.getKey().toString(), entry.getValue());
         }
-
         plugin.getConfig().set("savedRoles", savedRolesMap);
         plugin.saveConfig();
+
+        Bukkit.getLogger().info("[DEBUG] Nombre de joueurs en ligne : " + players.size());
+        Bukkit.getLogger().info("[DEBUG] Nombre de rôles disponibles : " + availableRoles.size());
     }
 
     public String getRole(Player player) {

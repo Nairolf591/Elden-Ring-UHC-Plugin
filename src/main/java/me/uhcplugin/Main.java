@@ -45,10 +45,18 @@ public class Main extends JavaPlugin implements Listener {
     private RanniRole ranniRole;
     private MelinaRole melinaRole;
     private MalikethRole malikethRole;
+    private DeathManager deathManager;
+
 
 
     @Override
     public void onEnable() {
+        getCommand("reanimate").setExecutor(new ReanimateCommand(this));
+        getCommand("deathsystem").setExecutor(new DeathSystemCommand(this));
+        getCommand("givecompass").setExecutor(new GiveCompassCommand(this));
+        DeathManager dm = new DeathManager(this);
+        Bukkit.getPluginManager().registerEvents(dm, this);
+        this.deathManager = dm;
         instance = this;
         Bukkit.getLogger().info("[UHCPlugin] Le plugin est en cours d'activation...");
         // ✅ Charge la configuration et force la mise à jour si nécessaire
@@ -138,6 +146,10 @@ public class Main extends JavaPlugin implements Listener {
             Bukkit.getLogger().severe("[UHCPlugin] ❌ Une erreur est survenue au démarrage !");
             e.printStackTrace();
         }
+    }
+
+    public DeathManager getDeathManager() {
+        return this.deathManager;
     }
 
     @Override
@@ -276,7 +288,7 @@ public class Main extends JavaPlugin implements Listener {
             }).start();
 
             Bukkit.getScheduler().runTaskLater(this, () -> {
-                new RoleManager(this).assignRoles();
+                roleManager.assignRoles();
                 GameManager.setGameState(GameManager.GameState.PLAYING);
                 Bukkit.broadcastMessage(ChatColor.GOLD + "🎭 Les rôles ont été attribués !");
             }, ticks);
@@ -334,7 +346,7 @@ public class Main extends JavaPlugin implements Listener {
         scoreboardManager.setPlayerScoreboard(player);
     }
 
-    private void giveCompass(Player player) {
+    public void giveCompass(Player player) {
         ItemStack compass = new ItemStack(Material.COMPASS);
         ItemMeta compassMeta = compass.getItemMeta();
         if (compassMeta != null) {

@@ -114,13 +114,18 @@ public class RanniRole implements Listener, CommandExecutor {
             plugin.getConfig().set("partners." + killer.getUniqueId().toString(), victim.getUniqueId().toString());
             plugin.saveConfig();
 
-            // 🔹 Ressuscite le joueur immédiatement
+// 🔹 Ressuscite le joueur immédiatement
             Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                victim.spigot().respawn();
-                victim.teleport(killer.getLocation()); // TP au killer
-                victim.sendMessage(ChatColor.LIGHT_PURPLE + "🌙 Une étrange puissance lunaire t’enveloppe...");
-                victim.sendMessage(ChatColor.AQUA + "✨ Ranni t’a lié à son destin, vous êtes désormais unis !");
-                victim.sendMessage(ChatColor.GOLD + "⚔ Ton objectif : Remporter la victoire à ses côtés !");
+                if (plugin.getDeathManager().reanimate(victim)) {
+                    victim.spigot().respawn(); // Force la fermeture du menu de respawn
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                        victim.teleport(killer.getLocation()); // TP au killer
+                        victim.sendMessage(ChatColor.LIGHT_PURPLE + "🌙 Une étrange puissance lunaire t’enveloppe...");
+                        victim.sendMessage(ChatColor.AQUA + "✨ Ranni t’a lié à son destin, vous êtes désormais unis !");
+                        victim.sendMessage(ChatColor.GOLD + "⚔ Ton objectif : Remporter la victoire à ses côtés !");
+                    }, 1L);
+                }
+
 
                 // 🔹 Restaure son inventaire après la résurrection
                 if (savedInventories.containsKey(victim.getUniqueId())) {

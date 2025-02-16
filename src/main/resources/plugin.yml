@@ -71,6 +71,18 @@ commands:
     description: "Permet à Maliketh de changer de phase."
     usage: "/maliketh_phase"
 
+  reanimate:
+    description: "Réanime un joueur en attente de réanimation."
+    usage: "/reanimate <joueur>"
+
+  deathsystem:
+    description: "Active ou désactive le système de mort custom."
+    usage: "/deathsystem <enable|disable>"
+
+  givecompass:
+    description: "Redonne la boussole du menu UHC."
+    usage: "/givecompass"
+
 permissions:
 
   uhcplugin.checkrole:
