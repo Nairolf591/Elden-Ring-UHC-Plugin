@@ -53,7 +53,7 @@ public class RoleManager implements CommandExecutor {
         // Associer chaque rôle à son camp
         roleCamps.put("Radahn", Camp.DEMI_DIEUX);
         roleCamps.put("Melina", Camp.TABLE_RONDE);
-        roleCamps.put("Sans-éclat", Camp.SOLITAIRES);
+        roleCamps.put("Sans-éclat", Camp.TABLE_RONDE);
         roleCamps.put("Ranni", Camp.SOLITAIRES);
         roleCamps.put("Godrick", Camp.DEMI_DIEUX);
         roleCamps.put("Morgott", Camp.DEMI_DIEUX);
