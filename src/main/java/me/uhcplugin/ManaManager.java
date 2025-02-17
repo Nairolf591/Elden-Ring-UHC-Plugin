@@ -13,6 +13,9 @@ public class ManaManager {
     private final int REGEN_AMOUNT = 5; // Mana régénéré toutes les X secondes
     private final int REGEN_INTERVAL = 20 * 5; // 5 secondes en ticks (1 sec = 20 ticks)
     private final Map<UUID, Integer> maxManaMap = new HashMap<>();
+    private final int DEFAULT_MANA = 100;
+    private HashMap<UUID, Integer> playerMana = new HashMap<>(); // Map pour stocker le mana de base des joueurs private HashMap<UUID, Integer> baseMana = new HashMap<>();
+    private Map<UUID, Integer> baseMana = new HashMap<>();
 
 
     public ManaManager(Main plugin) {
@@ -99,5 +102,10 @@ public class ManaManager {
         maxManaMap.put(player.getUniqueId(), amount);
     }
 
-
+    // Définit le mana de base du joueur et réinitialise son mana courant
+    public void setBaseMana(Player player, int newBaseMana) {
+        UUID uuid = player.getUniqueId();
+        baseMana.put(uuid, newBaseMana);
+        playerMana.put(uuid, newBaseMana);
+    }
 }

@@ -2,13 +2,18 @@ package me.uhcplugin.roles;
 
 import me.uhcplugin.Main;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
@@ -25,9 +30,37 @@ public class SansEclatRole implements Listener {
     private final Map<UUID, Long> frappeCooldown = new HashMap<>();
     private final Map<UUID, Long> messageCooldowns = new HashMap<>();
     private final Map<UUID, BukkitRunnable> cooldownTasks = new HashMap<>();
+    // Map pour stocker l'allocation de stats de chaque joueur
+    private Map<UUID, StatAllocation> statAllocations = new HashMap<>();
+    private Map<UUID, Long> statClickCooldowns = new HashMap<>();
+    private Map<UUID, Long> statInvestmentCooldowns = new HashMap<>();
+    private static final int COOLDOWN_THRESHOLD = 3; // Cooldown tous les 3 points investis
+    private static final long COOLDOWN_TIME = 6 * 60 * 1000; // 6 minutes en millisecondes
+
+
+    private static class StatAllocation {
+        int totalPoints;
+        int remainingPoints;
+        int vitality;
+        int damage;
+        int mana;
+        int speed;
+        int pointsInvestedSinceLastCooldown;
+
+        public StatAllocation(int points) {
+            this.totalPoints = points;
+            this.remainingPoints = points;
+            this.vitality = 0;
+            this.damage = 0;
+            this.mana = 0;
+            this.speed = 0;
+            this.pointsInvestedSinceLastCooldown = 0;
+        }
+    }
 
     public SansEclatRole(Main plugin) {
         this.plugin = plugin;
+        startCampfireHealingTask();
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
     }
 
@@ -282,6 +315,196 @@ public class SansEclatRole implements Listener {
         frappe.setItemMeta(meta);
 
         return new ItemStack[]{lame, cri, frappe};
+    }
+    // Méthode appelée lors de l'interaction sur un campfire pour ouvrir l'interface d'allocation
+    @EventHandler
+    public void onCampfireInteract(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        String role = plugin.getRoleManager().getRole(player);
+        if (role == null || !role.equalsIgnoreCase("sans-éclat")) return;
+
+        if (event.getClickedBlock() != null && event.getClickedBlock().getType() == Material.CAMPFIRE) {
+            boolean melinaNearby = false;
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                if (p.equals(player)) continue;
+                String otherRole = plugin.getRoleManager().getRole(p);
+                if (otherRole != null && otherRole.equalsIgnoreCase("melina")) {
+                    if (p.getLocation().distance(event.getClickedBlock().getLocation()) <= 10) {
+                        melinaNearby = true;
+                        break;
+                    }
+                }
+            }
+            if (melinaNearby) {
+                openStatAllocationMenu(player);
+            } else {
+                player.sendMessage(ChatColor.RED + "Aucune Melina à proximité du feu de camp !");
+            }
+        }
+    }
+
+    public void openStatAllocationMenu(Player player) {
+        UUID uuid = player.getUniqueId();
+        if (!statAllocations.containsKey(uuid)) {
+            int points = new Random().nextInt(3) + 8; // Génère entre 8 et 10 points
+            statAllocations.put(uuid, new StatAllocation(points));
+            player.sendMessage(ChatColor.AQUA + "Vous disposez de " + points + " points de statistiques à investir !");
+        }
+
+        Inventory inv = Bukkit.createInventory(null, 9, ChatColor.DARK_AQUA + "Allocation de Statistiques");
+
+        inv.setItem(1, createStatItem("Vitalité", "Augmente les PV (+0,5 cœur par point, max +10%)"));
+        inv.setItem(3, createStatItem("Dégâts", "Augmente les dégâts de 2% par point (max 10%)"));
+        inv.setItem(5, createStatItem("Mana", "Augmente le mana de base (+10 par point, max +10%)"));
+        inv.setItem(7, createStatItem("Vitesse", "Augmente la vitesse de déplacement (+2% par point, max +10%)"));
+
+        player.openInventory(inv);
+    }
+
+    private ItemStack createStatItem(String statName, String description) {
+        ItemStack item = new ItemStack(Material.BEACON);
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            meta.setDisplayName(ChatColor.GOLD + statName);
+            meta.setLore(Arrays.asList(ChatColor.YELLOW + description, ChatColor.GRAY + "Cliquez pour investir un point"));
+            item.setItemMeta(meta);
+        }
+        return item;
+    }
+
+    @EventHandler
+    public void onStatAllocationClick(InventoryClickEvent event) {
+        if (!event.getView().getTitle().equals(ChatColor.DARK_AQUA + "Allocation de Statistiques")) return;
+        event.setCancelled(true);
+        Player player = (Player) event.getWhoClicked();
+        ItemStack clicked = event.getCurrentItem();
+        if (clicked == null || !clicked.hasItemMeta()) return;
+
+        UUID uuid = player.getUniqueId();
+        long now = System.currentTimeMillis();
+
+        if (statClickCooldowns.containsKey(uuid) && (now - statClickCooldowns.get(uuid)) < 1000) {
+            player.sendMessage(ChatColor.RED + "Patientez avant de réinvestir !");
+            return;
+        }
+        statClickCooldowns.put(uuid, now);
+
+        String stat = ChatColor.stripColor(clicked.getItemMeta().getDisplayName());
+        if (!statAllocations.containsKey(uuid)) {
+            player.sendMessage(ChatColor.RED + "Erreur : allocation non trouvée !");
+            return;
+        }
+
+        StatAllocation allocation = statAllocations.get(uuid);
+        if (allocation.remainingPoints <= 0) {
+            player.sendMessage(ChatColor.RED + "Vous n'avez plus de points à investir !");
+            return;
+        }
+
+        // Vérification du cooldown après chaque 3 points investis
+        if (allocation.pointsInvestedSinceLastCooldown >= COOLDOWN_THRESHOLD) {
+            if (statInvestmentCooldowns.containsKey(uuid)) {
+                long remainingCooldown = (statInvestmentCooldowns.get(uuid) + COOLDOWN_TIME) - now;
+                if (remainingCooldown > 0) {
+                    long minutesLeft = remainingCooldown / (60 * 1000);
+                    long secondsLeft = (remainingCooldown / 1000) % 60;
+                    player.sendMessage(ChatColor.RED + "Vous devez attendre " + minutesLeft + "min " + secondsLeft + "s avant de réinvestir !");
+                    return;
+                }
+            }
+            statInvestmentCooldowns.put(uuid, now);
+            allocation.pointsInvestedSinceLastCooldown = 0;
+
+            // Tâche programmée pour informer le joueur à la fin du cooldown
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                player.sendMessage(ChatColor.GREEN + "Vous pouvez de nouveau investir des points !");
+            }, COOLDOWN_TIME / 50);
+        }
+
+        switch (stat) {
+            case "Vitalité":
+                if (allocation.vitality < 5) allocation.vitality++;
+                break;
+            case "Dégâts":
+                if (allocation.damage < 5) allocation.damage++;
+                break;
+            case "Mana":
+                if (allocation.mana < 5) allocation.mana++;
+                break;
+            case "Vitesse":
+                if (allocation.speed < 5) allocation.speed++;
+                break;
+            default:
+                player.sendMessage(ChatColor.RED + "Stat inconnue !");
+                return;
+        }
+
+        allocation.remainingPoints--;
+        allocation.pointsInvestedSinceLastCooldown++;
+        applyStatEffects(player, allocation);
+        player.sendMessage(ChatColor.GREEN + "Vous avez investi un point en " + stat + " ! (" + allocation.remainingPoints + " point(s) restant(s))");
+
+        if (allocation.remainingPoints == 0) {
+            player.sendMessage(ChatColor.AQUA + "Tous vos points ont été investis !");
+            player.closeInventory();
+        }
+    }
+
+    private void applyStatEffects(Player player, StatAllocation allocation) {
+        double baseMaxHealth = 20.0;
+        double newMaxHealth = baseMaxHealth + (allocation.vitality * 2);
+        player.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(newMaxHealth);
+        player.sendMessage(ChatColor.AQUA + "Votre vie max : " + newMaxHealth / 2 + " cœurs.");
+
+        double bonusPercentage = Math.min(allocation.damage * 2, 10) / 100.0;
+        double baseDamage = player.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).getBaseValue();
+        player.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).setBaseValue(baseDamage * (1 + bonusPercentage));
+        player.sendMessage(ChatColor.AQUA + "Vos dégâts sont augmentés de " + (bonusPercentage * 100) + "%.");
+
+        int newMana = 100 + (allocation.mana * 10);
+        plugin.getManaManager().setBaseMana(player, newMana);
+        player.sendMessage(ChatColor.AQUA + "Votre mana de base : " + newMana + ".");
+
+        double baseSpeed = 0.2;
+        double newSpeed = baseSpeed + (allocation.speed * 0.02);
+        player.setWalkSpeed((float) Math.min(newSpeed, 1.0));
+        player.sendMessage(ChatColor.AQUA + "Votre vitesse de déplacement est augmentée de " + (allocation.speed * 2) + "%.");
+    }
+
+    // Tâche répétée qui soigne passivement les joueurs proches d'un campfire
+    private void startCampfireHealingTask() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    if (isNearCampfire(player.getLocation(), 5)) { // rayon de 5 blocs
+                        double health = player.getHealth();
+                        double maxHealth = player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue();
+                        if (health < maxHealth) {
+                            player.setHealth(Math.min(maxHealth, health + 1)); // 1 point = 0,5 cœur (un cœur = 2 points)
+                        }
+                    }
+                }
+            }
+        }.runTaskTimer(plugin, 0L, 200L); // 200 ticks = 10 secondes
+    }
+
+    // Vérifie si un campfire se trouve dans un rayon autour d'une position donnée
+    private boolean isNearCampfire(Location loc, int radius) {
+        World world = loc.getWorld();
+        int cx = loc.getBlockX();
+        int cy = loc.getBlockY();
+        int cz = loc.getBlockZ();
+        for (int x = cx - radius; x <= cx + radius; x++) {
+            for (int y = cy - radius; y <= cy + radius; y++) {
+                for (int z = cz - radius; z <= cz + radius; z++) {
+                    if (world.getBlockAt(x, y, z).getType() == Material.CAMPFIRE) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
 }

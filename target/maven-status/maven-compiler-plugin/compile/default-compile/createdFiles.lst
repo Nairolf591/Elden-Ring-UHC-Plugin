@@ -1,6 +1,7 @@
 me\uhcplugin\DeathManager.class
 me\uhcplugin\ConfirmStuffCommand.class
 me\uhcplugin\Main.class
+me\uhcplugin\roles\SansEclatRole$5.class
 me\uhcplugin\roles\MelinaRole$2.class
 me\uhcplugin\roles\RanniRole.class
 me\uhcplugin\roles\SansEclatRole$1.class
@@ -11,6 +12,7 @@ me\uhcplugin\CountdownTimer$1.class
 me\uhcplugin\UHCManager.class
 me\uhcplugin\GiveCompassCommand.class
 me\uhcplugin\GameManager.class
+me\uhcplugin\roles\SansEclatRole$StatAllocation.class
 me\uhcplugin\roles\SansEclatRole$2.class
 me\uhcplugin\ReanimateCommand.class
 me\uhcplugin\RoleMenu.class
