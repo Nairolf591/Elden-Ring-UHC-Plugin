@@ -1,5 +1,6 @@
 package me.uhcplugin;
 
+import me.uhcplugin.roles.MasqueDOrRole;
 import me.uhcplugin.roles.MelinaRole;
 import me.uhcplugin.roles.SansEclatRole;
 import org.bukkit.Bukkit;
@@ -60,7 +61,7 @@ public class RoleManager implements CommandExecutor {
         roleCamps.put("Margit", Camp.DEMI_DIEUX);
         roleCamps.put("D_témoin_de_la_mort", Camp.TABLE_RONDE);
         roleCamps.put("Maliketh", Camp.DEMI_DIEUX);
-        roleCamps.put("Mask d'or", Camp.TABLE_RONDE);
+        roleCamps.put("Masque d'Or", Camp.TABLE_RONDE);
 
         // Ajouter les descriptions de rôle
         roleDescriptions.put("Radahn", "Tu es le puissant général Radahn, l'un des plus forts Demi-Dieux...");
@@ -72,7 +73,7 @@ public class RoleManager implements CommandExecutor {
         roleDescriptions.put("Margit", "Tu es Margit, le gardien du Château de Voilorage, impitoyable envers les intrus...");
         roleDescriptions.put("D_témoin_de_la_mort", "Tu es D, un chasseur de morts aux motivations mystérieuses...");
         roleDescriptions.put("Maliketh", "Tu es Maliketh...");
-        roleDescriptions.put("Mask d'or", "Tu es Mask d'or...");
+        roleDescriptions.put("Masque d'Or", "Tu es Masque d'or...");
     }
 
     public void assignRoles() {
@@ -109,6 +110,8 @@ public class RoleManager implements CommandExecutor {
                     plugin.getMalikethRole().giveMalikethItems(player);
                 } else if (role.equalsIgnoreCase("Sans-éclat")) {
                     player.getInventory().addItem(SansEclatRole.getSansEclatItems());
+                } else if (role.equalsIgnoreCase("Masque d'Or")) {
+                    player.getInventory().addItem(MasqueDOrRole.getMasqueDOrItems());
                 }
             } else {
                 // Si aucun rôle n'est disponible, attribue un rôle par défaut
