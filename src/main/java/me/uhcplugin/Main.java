@@ -1,9 +1,6 @@
 package me.uhcplugin;
 
-import me.uhcplugin.roles.MalikethRole;
-import me.uhcplugin.roles.MelinaRole;
-import me.uhcplugin.roles.RanniRole;
-import me.uhcplugin.roles.SansEclatRole;
+import me.uhcplugin.roles.*;
 import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -47,6 +44,7 @@ public class Main extends JavaPlugin implements Listener {
     private MelinaRole melinaRole;
     private MalikethRole malikethRole;
     private SansEclatRole sansEclatRole;
+    private MasqueDOrRole masqueDOrRole;
     private DeathManager deathManager;
 
 
@@ -90,6 +88,11 @@ public class Main extends JavaPlugin implements Listener {
         // Sans-éclat
         sansEclatRole = new SansEclatRole(this);
         getServer().getPluginManager().registerEvents(sansEclatRole, this);
+
+        // Masque d'or
+        masqueDOrRole = new MasqueDOrRole(this);
+        getServer().getPluginManager().registerEvents(masqueDOrRole, this);
+        getCommand("decret").setExecutor(masqueDOrRole);
 
         try {
             saveDefaultConfig();

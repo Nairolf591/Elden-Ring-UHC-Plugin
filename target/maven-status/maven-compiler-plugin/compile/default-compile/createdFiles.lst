@@ -1,3 +1,4 @@
+me\uhcplugin\roles\MasqueDOrRole.class
 me\uhcplugin\DeathManager.class
 me\uhcplugin\ConfirmStuffCommand.class
 me\uhcplugin\Main.class
@@ -7,6 +8,7 @@ me\uhcplugin\roles\RanniRole.class
 me\uhcplugin\roles\SansEclatRole$1.class
 me\uhcplugin\RoleManager.class
 me\uhcplugin\roles\SansEclatRole.class
+me\uhcplugin\roles\MasqueDOrRole$4.class
 me\uhcplugin\CountdownTimer.class
 me\uhcplugin\CountdownTimer$1.class
 me\uhcplugin\UHCManager.class
@@ -15,10 +17,12 @@ me\uhcplugin\GameManager.class
 me\uhcplugin\roles\SansEclatRole$StatAllocation.class
 me\uhcplugin\roles\SansEclatRole$2.class
 me\uhcplugin\ReanimateCommand.class
+me\uhcplugin\roles\MasqueDOrRole$2.class
 me\uhcplugin\RoleMenu.class
 me\uhcplugin\DeathSystemCommand.class
 me\uhcplugin\roles\MelinaRole.class
 me\uhcplugin\roles\SansEclatRole$4.class
+me\uhcplugin\roles\MasqueDOrRole$3.class
 me\uhcplugin\roles\MelinaRole$1.class
 me\uhcplugin\UHCManager$1.class
 me\uhcplugin\Main$1.class
@@ -27,6 +31,7 @@ me\uhcplugin\roles\MalikethRole$2.class
 me\uhcplugin\ScoreboardManager.class
 me\uhcplugin\Camp.class
 me\uhcplugin\roles\MalikethRole.class
+me\uhcplugin\roles\MasqueDOrRole$1.class
 me\uhcplugin\roles\MalikethRole$1.class
 me\uhcplugin\GameManager$GameState.class
 me\uhcplugin\DeathManager$1.class
