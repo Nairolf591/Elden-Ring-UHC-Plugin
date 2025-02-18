@@ -25,7 +25,8 @@ roles:
   Margit: false
   D_témoin_de_la_mort: false
   Maliketh : false
-  Mask d'or : false
+  Masque d'Or : false
+  Alexandre : false
 
 pvp-timer: 1
 border-size: 400

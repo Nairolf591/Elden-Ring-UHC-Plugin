@@ -26,6 +26,7 @@ roles:
   D_témoin_de_la_mort: false
   Maliketh : false
   Masque d'Or : false
+  Alexandre : false
 
 pvp-timer: 1
 border-size: 400

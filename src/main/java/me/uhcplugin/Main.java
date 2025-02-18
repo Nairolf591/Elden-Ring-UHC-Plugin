@@ -45,6 +45,7 @@ public class Main extends JavaPlugin implements Listener {
     private MalikethRole malikethRole;
     private SansEclatRole sansEclatRole;
     private MasqueDOrRole masqueDOrRole;
+    private AlexandreRole alexandreRole;
     private DeathManager deathManager;
 
 
@@ -93,6 +94,10 @@ public class Main extends JavaPlugin implements Listener {
         masqueDOrRole = new MasqueDOrRole(this);
         getServer().getPluginManager().registerEvents(masqueDOrRole, this);
         getCommand("decret").setExecutor(masqueDOrRole);
+
+        // Alexandre
+        alexandreRole = new AlexandreRole(this);
+        getServer().getPluginManager().registerEvents(alexandreRole, this);
 
         try {
             saveDefaultConfig();
