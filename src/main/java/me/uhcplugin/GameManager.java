@@ -2,9 +2,11 @@ package me.uhcplugin;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
 
 public class GameManager {
 
@@ -37,6 +39,7 @@ public class GameManager {
         }
 
         if (state == GameState.ENDED) {
+            resetPlayerStats(); //reset tout
             Bukkit.broadcastMessage(ChatColor.RED + "🏁 La partie est terminée !");
             Bukkit.getScheduler().runTaskLater(Main.getInstance(), () -> {
                 Main.getInstance().resetUHCWorld();
@@ -91,5 +94,23 @@ public class GameManager {
         // 📌 Remettre l'état du jeu en attente
         setGameState(GameState.WAITING);
     }
+
+    public static void resetPlayerStats() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            // Réinitialiser la vie maximale
+            player.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(20.0);
+            player.setHealth(20.0); // Rétablir la vie actuelle à 20
+
+            // Retirer tous les effets
+            for (PotionEffect effect : player.getActivePotionEffects()) {
+                player.removePotionEffect(effect.getType());
+            }
+
+            // Réinitialiser la vitesse de déplacement
+            player.setWalkSpeed(0.2f); // Vitesse par défaut dans Minecraft
+            player.getInventory().clear(); // Vide l'inventaire du joueur
+        }
+    }
+
 
 }

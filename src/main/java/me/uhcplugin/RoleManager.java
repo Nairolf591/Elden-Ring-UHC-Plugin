@@ -1,9 +1,6 @@
 package me.uhcplugin;
 
-import me.uhcplugin.roles.AlexandreRole;
-import me.uhcplugin.roles.MasqueDOrRole;
-import me.uhcplugin.roles.MelinaRole;
-import me.uhcplugin.roles.SansEclatRole;
+import me.uhcplugin.roles.*;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -64,6 +61,8 @@ public class RoleManager implements CommandExecutor {
         roleCamps.put("Maliketh", Camp.DEMI_DIEUX);
         roleCamps.put("Masque d'Or", Camp.TABLE_RONDE);
         roleCamps.put("Alexandre", Camp.TABLE_RONDE);
+        roleCamps.put("Jar Bairn", Camp.TABLE_RONDE);
+
 
         // Ajouter les descriptions de rôle
         roleDescriptions.put("Radahn", "Tu es le puissant général Radahn, l'un des plus forts Demi-Dieux...");
@@ -77,6 +76,8 @@ public class RoleManager implements CommandExecutor {
         roleDescriptions.put("Maliketh", "Tu es Maliketh...");
         roleDescriptions.put("Masque d'Or", "Tu es Masque d'or...");
         roleDescriptions.put("Alexandre", "Tu es Alexandre, le guerrier légendaire protégé par une carapace de fer...");
+        roleDescriptions.put("Jar Bairn", "Tu es Jar Bairn...");
+
     }
 
     public void assignRoles() {
@@ -117,6 +118,8 @@ public class RoleManager implements CommandExecutor {
                     player.getInventory().addItem(MasqueDOrRole.getMasqueDOrItems());
                 } else if (role.equalsIgnoreCase("Alexandre")) {
                     player.getInventory().addItem(AlexandreRole.getAlexandreItems());
+                } else if (role.equalsIgnoreCase("Jar Bairn")) {
+                    //Pas d'items
                 }
             } else {
                 // Si aucun rôle n'est disponible, attribue un rôle par défaut

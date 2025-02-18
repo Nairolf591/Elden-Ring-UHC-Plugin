@@ -13,6 +13,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
@@ -36,6 +37,8 @@ public class AlexandreRole implements Listener {
     }
 
     public static ItemStack[] getAlexandreItems() {
+
+
         // Création des items
         ItemStack ondeItem = createAbilityItem("1️⃣ Onde de Choc du Pot", "💥", Arrays.asList(
                 ChatColor.GRAY + "Dégâts: 2 cœurs dans 5 blocs",
@@ -66,6 +69,15 @@ public class AlexandreRole implements Listener {
         meta.setLore(lore);
         item.setItemMeta(meta);
         return item;
+    }
+
+    // Applique Résistance 1 permanent à Alexandre
+    @EventHandler  //Askip souci rési, donc si problème déco reco
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        if ("Alexandre".equalsIgnoreCase(plugin.getRoleManager().getRole(player))) {
+            applyResistance(player);
+        }
     }
 
 
@@ -204,4 +216,19 @@ public class AlexandreRole implements Listener {
     private void startCooldown(UUID uuid, Map<UUID, Long> cooldownMap, long cooldownSeconds) {
         cooldownMap.put(uuid, System.currentTimeMillis() + (cooldownSeconds * 1000));
     }
+
+    // Applique Résistance 1 permanent
+    private void applyResistance(Player player) {
+        player.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, Integer.MAX_VALUE, 0, false, false));
+    }
+
+    // Donne les items et la résistance à Alexandre
+    public void giveAlexandreItems(Player player) { //Surchage, si 0 usage alors del possible
+        // Applique Résistance 1
+        applyResistance(player);
+
+        // Donne les items
+        player.getInventory().addItem(getAlexandreItems());
+    }
+
 }
