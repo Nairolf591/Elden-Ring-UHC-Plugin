@@ -3,6 +3,8 @@ me\uhcplugin\DeathManager.class
 me\uhcplugin\ConfirmStuffCommand.class
 me\uhcplugin\Main.class
 me\uhcplugin\roles\SansEclatRole$5.class
+me\uhcplugin\roles\AlexandreRole.class
+me\uhcplugin\roles\AlexandreRole$2.class
 me\uhcplugin\roles\MelinaRole$2.class
 me\uhcplugin\roles\RanniRole.class
 me\uhcplugin\roles\SansEclatRole$1.class
@@ -30,6 +32,7 @@ me\uhcplugin\ManaManager.class
 me\uhcplugin\roles\MalikethRole$2.class
 me\uhcplugin\ScoreboardManager.class
 me\uhcplugin\Camp.class
+me\uhcplugin\roles\AlexandreRole$1.class
 me\uhcplugin\roles\MalikethRole.class
 me\uhcplugin\roles\MasqueDOrRole$1.class
 me\uhcplugin\roles\MalikethRole$1.class

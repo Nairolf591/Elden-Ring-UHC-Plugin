@@ -1,5 +1,6 @@
 package me.uhcplugin;
 
+import me.uhcplugin.roles.AlexandreRole;
 import me.uhcplugin.roles.MasqueDOrRole;
 import me.uhcplugin.roles.MelinaRole;
 import me.uhcplugin.roles.SansEclatRole;
@@ -62,6 +63,7 @@ public class RoleManager implements CommandExecutor {
         roleCamps.put("D_témoin_de_la_mort", Camp.TABLE_RONDE);
         roleCamps.put("Maliketh", Camp.DEMI_DIEUX);
         roleCamps.put("Masque d'Or", Camp.TABLE_RONDE);
+        roleCamps.put("Alexandre", Camp.TABLE_RONDE);
 
         // Ajouter les descriptions de rôle
         roleDescriptions.put("Radahn", "Tu es le puissant général Radahn, l'un des plus forts Demi-Dieux...");
@@ -74,6 +76,7 @@ public class RoleManager implements CommandExecutor {
         roleDescriptions.put("D_témoin_de_la_mort", "Tu es D, un chasseur de morts aux motivations mystérieuses...");
         roleDescriptions.put("Maliketh", "Tu es Maliketh...");
         roleDescriptions.put("Masque d'Or", "Tu es Masque d'or...");
+        roleDescriptions.put("Alexandre", "Tu es Alexandre, le guerrier légendaire protégé par une carapace de fer...");
     }
 
     public void assignRoles() {
@@ -112,6 +115,8 @@ public class RoleManager implements CommandExecutor {
                     player.getInventory().addItem(SansEclatRole.getSansEclatItems());
                 } else if (role.equalsIgnoreCase("Masque d'Or")) {
                     player.getInventory().addItem(MasqueDOrRole.getMasqueDOrItems());
+                } else if (role.equalsIgnoreCase("Alexandre")) {
+                    player.getInventory().addItem(AlexandreRole.getAlexandreItems());
                 }
             } else {
                 // Si aucun rôle n'est disponible, attribue un rôle par défaut

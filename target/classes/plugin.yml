@@ -83,6 +83,10 @@ commands:
     description: "Redonne la boussole du menu UHC."
     usage: "/givecompass"
 
+  decret:
+    description: "Active le Décret du Savoir Divin."
+    usage: "/decret"
+
 permissions:
 
   uhcplugin.checkrole:
