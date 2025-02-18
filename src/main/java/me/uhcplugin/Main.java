@@ -46,6 +46,7 @@ public class Main extends JavaPlugin implements Listener {
     private SansEclatRole sansEclatRole;
     private MasqueDOrRole masqueDOrRole;
     private AlexandreRole alexandreRole;
+    private JarBairnRole jarbairnRole;
     private DeathManager deathManager;
 
 
@@ -98,6 +99,10 @@ public class Main extends JavaPlugin implements Listener {
         // Alexandre
         alexandreRole = new AlexandreRole(this);
         getServer().getPluginManager().registerEvents(alexandreRole, this);
+
+        //Jar Bairn
+        jarbairnRole = new JarBairnRole(this);
+        getServer().getPluginManager().registerEvents(jarbairnRole , this);
 
         try {
             saveDefaultConfig();

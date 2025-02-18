@@ -27,6 +27,7 @@ roles:
   Maliketh : false
   Masque d'Or : false
   Alexandre : false
+  Jar Bairn: false
 
 pvp-timer: 1
 border-size: 400
